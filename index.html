@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chit-chat</title>
+  <title>Aplikasi Chat Realtime</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -64,7 +64,7 @@
     <div class="name-modal" id="name-modal">
       <h3>Masukkan Nama Kamu</h3>
       <p>Nama ini akan muncul di atas pesan yang kamu kirim.</p>
-      <input type="text" id="username-input" placeholder="Contoh: Hilda" maxlength="15" autocomplete="off">
+      <input type="text" id="username-input" placeholder="Contoh: Biong" maxlength="15" autocomplete="off">
       <button id="join-btn">Mulai Chat</button>
     </div>
 
@@ -97,6 +97,32 @@
 
     let currentUsername = "";
     const ADMIN_PASSWORD = "jedutitil"; // SANDI RAHASIA ADMIN
+    let isInitialLoad = true; // Flag penanda pesan lama saat web dibuka
+
+    // FUNGSI MEMBUNYIKAN NOTIFIKASI SUARA (WEB AUDIO API)
+    function playNotificationSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        // Frekuensi suara "ting" yang halus
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+      } catch (e) {
+        console.log("Browser memblokir audio otomatis");
+      }
+    }
 
     // ELEMEN UI
     const modal = document.getElementById('name-modal');
@@ -114,6 +140,9 @@
         currentUsername = name;
         userInfo.innerText = `Kamu: ${currentUsername}`;
         modal.style.display = 'none';
+        
+        // Mematikan mode muat awal setelah 1 detik
+        setTimeout(() => { isInitialLoad = false; }, 1000);
       }
     });
 
@@ -135,7 +164,7 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // LOGIKA TAMPILKAN PESAN REALTIME
+    // LOGIKA TAMPILKAN PESAN REALTIME & NOTIFIKASI
     onChildAdded(messagesRef, (snapshot) => {
       const msgId = snapshot.key;
       const data = snapshot.val();
@@ -153,7 +182,7 @@
         <div class="msg-bubble">${data.text}</div>
       `;
       
-      // LOGIKA HAPUS PESAN DENGAN SANDI
+      // HAPUS PESAN DENGAN SANDI
       const deleteBtn = msgGroup.querySelector('.delete-btn');
       deleteBtn.addEventListener('click', () => {
         const passwordInput = prompt("Masukkan Sandi Rahasia Admin untuk menghapus pesan ini:");
@@ -166,9 +195,14 @@
 
       msgContainer.appendChild(msgGroup);
       msgContainer.scrollTop = msgContainer.scrollHeight;
+
+      // BUNYIKAN SUARA NOTIFIKASI (Hanya jika pesan baru dan dikirim dari lawan bicara)
+      if (!isMe && !isInitialLoad) {
+        playNotificationSound();
+      }
     });
 
-    // LOGIKA HAPUS PESAN DARI LAYAR SECARA REALTIME
+    // HAPUS PESAN SECARA REALTIME
     onChildRemoved(messagesRef, (snapshot) => {
       const msgId = snapshot.key;
       const elementToRemove = document.getElementById(`msg-${msgId}`);
