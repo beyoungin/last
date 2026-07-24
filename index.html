@@ -3,43 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Chat Realtime</title>
+  <title>Aplikasi Chat Realtime Super Lengkap</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
     body { background-color: #0b0f19; color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
     
-    .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 450px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 480px; height: 88vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     
     /* POPUP MASUKKAN NAMA */
-    .name-modal { position: absolute; inset: 0; background: #151d2a; z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
+    .name-modal { position: absolute; inset: 0; background: #151d2a; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
     .name-modal h3 { font-size: 1.3rem; color: #f8fafc; margin-bottom: 0.5rem; }
     .name-modal p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.5rem; }
     .name-modal input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.95rem; text-align: center; margin-bottom: 1rem; outline: none; }
-    .name-modal input:focus { border-color: #38bdf8; }
-    .name-modal button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-    .name-modal button:hover { background: #7dd3fc; }
+    .name-modal button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
 
     /* HEADER */
     .chat-header { background: rgba(0, 0, 0, 0.3); padding: 0.8rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; }
     .chat-header-info h2 { font-size: 1rem; color: #f8fafc; }
     .chat-header-info p { font-size: 0.78rem; color: #38bdf8; font-weight: 600; margin-top: 0.1rem; }
-    
-    /* Tombol Ganti Nama */
-    .change-name-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
-    .change-name-btn:hover { background: rgba(255,255,255,0.15); color: #f8fafc; }
+    .change-name-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
 
     /* AREA PESAN */
     .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
-    
-    .msg-group { display: flex; flex-direction: column; max-width: 80%; }
-    
-    .msg-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
+    .msg-group { display: flex; flex-direction: column; max-width: 85%; }
+    .msg-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
     .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; }
-    .delete-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; opacity: 0.5; transition: 0.2s; }
-    .delete-btn:hover { opacity: 1; transform: scale(1.1); }
+    
+    .action-icon { background: none; border: none; cursor: pointer; font-size: 0.75rem; opacity: 0.6; transition: 0.2s; }
+    .action-icon:hover { opacity: 1; transform: scale(1.15); }
 
-    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; }
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; position: relative; }
+    
+    /* KUTIPAN REPLY PESAN */
+    .reply-preview-box { background: rgba(0, 0, 0, 0.25); border-left: 3px solid #38bdf8; padding: 0.3rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.4rem; color: #cbd5e1; }
+    .reply-preview-box .reply-name { font-weight: 700; color: #38bdf8; font-size: 0.7rem; }
+
+    .edited-tag { font-size: 0.65rem; font-style: italic; opacity: 0.7; margin-left: 0.3rem; }
+
+    /* PEMUTAR AUDIO */
+    audio { height: 35px; width: 200px; margin-top: 0.2rem; outline: none; }
 
     /* PESAN KAMU (BIRU - KANAN) */
     .msg-group.me { align-self: flex-end; }
@@ -53,11 +56,29 @@
     .msg-group.them .sender-name { color: #34d399; }
     .msg-group.them .msg-bubble { background: #0f766e; color: #f0fdf4; border-bottom-left-radius: 2px; }
 
+    /* BARIS INDIKATOR BALAS PESAN INI */
+    .reply-bar { background: #0b0f19; padding: 0.4rem 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); display: none; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #38bdf8; }
+    .reply-bar button { background: none; border: none; color: #f43f5e; cursor: pointer; font-weight: 700; }
+
+    /* MENU EMOJI POPUP */
+    .emoji-picker { display: none; background: #0b0f19; border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 0.5rem; gap: 0.5rem; flex-wrap: wrap; justify-content: center; max-height: 100px; overflow-y: auto; }
+    .emoji-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.2rem; transition: 0.1s; }
+    .emoji-btn:hover { transform: scale(1.2); }
+
     /* INPUT FORM */
-    .chat-input { padding: 0.8rem; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.5rem; }
-    .chat-input input { flex: 1; padding: 0.7rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.88rem; outline: none; }
-    .chat-input input:focus { border-color: #38bdf8; }
-    .chat-input button { background: #38bdf8; color: #0b0f19; border: none; padding: 0 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .chat-input { padding: 0.6rem 0.8rem; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.3rem; align-items: center; }
+    .chat-input input { flex: 1; padding: 0.65rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.88rem; outline: none; }
+    
+    .btn-action { background: #38bdf8; color: #0b0f19; border: none; padding: 0.65rem 0.9rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-icon-only { background: rgba(255,255,255,0.05); color: #f8fafc; border: 1px solid #334155; padding: 0.65rem 0.8rem; }
+    .btn-record { background: #e11d48; color: #ffffff; }
+    .btn-record.recording { animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); background: #f43f5e; }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -66,8 +87,8 @@
     <!-- POPUP INPUT NAMA -->
     <div class="name-modal" id="name-modal">
       <h3>Masukkan Nama Kamu</h3>
-      <p>Nama ini akan tersimpan otomatis di devicemu.</p>
-      <input type="text" id="username-input" placeholder="Contoh: biong" maxlength="15" autocomplete="off">
+      <p>Nama ini akan tersimpan otomatis di HP kamu.</p>
+      <input type="text" id="username-input" placeholder="Contoh: Biong" maxlength="15" autocomplete="off">
       <button id="join-btn">Mulai Chat</button>
     </div>
 
@@ -82,15 +103,33 @@
     
     <div class="chat-messages" id="messages-container"></div>
     
+    <!-- INDIKATOR BALAS PESAN -->
+    <div class="reply-bar" id="reply-bar">
+      <span>Balas <b id="reply-target-name"></b>: <i id="reply-target-text"></i></span>
+      <button id="cancel-reply-btn">✕ Batal</button>
+    </div>
+
+    <!-- DAFTAR EMOJI -->
+    <div class="emoji-picker" id="emoji-picker">
+      <button class="emoji-btn">😀</button><button class="emoji-btn">😂</button>
+      <button class="emoji-btn">😍</button><button class="emoji-btn">🥺</button>
+      <button class="emoji-btn">😎</button><button class="emoji-btn">👍</button>
+      <button class="emoji-btn">❤️</button><button class="emoji-btn">🔥</button>
+      <button class="emoji-btn">🎉</button><button class="emoji-btn">🙏</button>
+    </div>
+
+    <!-- INPUT FORM -->
     <div class="chat-input">
+      <button class="btn-action btn-icon-only" id="toggle-emoji-btn" title="Pilih Emoji">😊</button>
       <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
-      <button id="send-btn">Kirim</button>
+      <button class="btn-action btn-record" id="record-btn" title="Rekam VN">🎤</button>
+      <button class="btn-action" id="send-btn">Kirim</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, onChildRemoved, onChildChanged, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // ⚠️ MASUKKAN DATABASE URL FIREBASE-MU DI SINI
     const firebaseConfig = {
@@ -104,6 +143,7 @@
     let currentUsername = "";
     const ADMIN_PASSWORD = "jedutitil"; 
     let isInitialLoad = true;
+    let activeReplyData = null; // Menyimpan data pesan yang sedang dibalas
 
     // ELEMEN UI
     const modal = document.getElementById('name-modal');
@@ -114,8 +154,21 @@
     const msgContainer = document.getElementById('messages-container');
     const msgInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    const recordBtn = document.getElementById('record-btn');
+    
+    const replyBar = document.getElementById('reply-bar');
+    const replyTargetName = document.getElementById('reply-target-name');
+    const replyTargetText = document.getElementById('reply-target-text');
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+    
+    const emojiPicker = document.getElementById('emoji-picker');
+    const toggleEmojiBtn = document.getElementById('toggle-emoji-btn');
 
-    // FUNGSI MEMBUNYIKAN NOTIFIKASI
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // FUNGSI NOTIFIKASI
     function playNotificationSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -134,50 +187,69 @@
 
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
-      } catch (e) {
-        console.log("Audio diblokir browser");
-      }
+      } catch (e) {}
     }
 
-    // FUNGSI SET NAMA
+    // SET NAMA & AUTOSAVE
     function setUsername(name) {
       currentUsername = name;
-      localStorage.setItem('saved_chat_username', name); // SIMPAN PERMANEN DI DEVICE
+      localStorage.setItem('saved_chat_username', name);
       userInfo.innerText = `Kamu: ${currentUsername}`;
       modal.style.display = 'none';
       setTimeout(() => { isInitialLoad = false; }, 1000);
     }
 
-    // CEK APAKAH DEVICE INI SUDAH PUNYA NAMA TERSIMPAN
     const savedName = localStorage.getItem('saved_chat_username');
-    if (savedName) {
-      setUsername(savedName);
-    }
+    if (savedName) setUsername(savedName);
 
-    // LOGIKA TOMBOL MASUK NAMA
     joinBtn.addEventListener('click', () => {
       const name = usernameInput.value.trim();
-      if (name !== "") {
-        setUsername(name);
-      }
+      if (name !== "") setUsername(name);
     });
 
-    // LOGIKA TOMBOL GANTI NAMA
     changeNameBtn.addEventListener('click', () => {
       usernameInput.value = currentUsername;
       modal.style.display = 'flex';
     });
 
-    // LOGIKA KIRIM PESAN
+    // TOGGLE & PILIH EMOJI
+    toggleEmojiBtn.addEventListener('click', () => {
+      emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        msgInput.value += btn.innerText;
+        msgInput.focus();
+      });
+    });
+
+    // BATAL BALAS PESAN
+    cancelReplyBtn.addEventListener('click', () => {
+      activeReplyData = null;
+      replyBar.style.display = 'none';
+    });
+
+    // LOGIKA KIRIM PESAN TEKS
     function sendMessage() {
       const text = msgInput.value.trim();
       if (text !== "" && currentUsername !== "") {
-        push(messagesRef, {
+        const payload = {
           sender: currentUsername,
           text: text,
+          type: "text",
           timestamp: Date.now()
-        });
+        };
+
+        if (activeReplyData) {
+          payload.replyTo = activeReplyData;
+        }
+
+        push(messagesRef, payload);
         msgInput.value = "";
+        activeReplyData = null;
+        replyBar.style.display = 'none';
+        emojiPicker.style.display = 'none';
       }
     }
 
@@ -186,7 +258,79 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // LOGIKA TAMPILKAN PESAN REALTIME
+    // LOGIKA REKAM VOICE NOTE (VN)
+    recordBtn.addEventListener('click', async () => {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+              const payload = {
+                sender: currentUsername,
+                audio: reader.result,
+                type: "audio",
+                timestamp: Date.now()
+              };
+              if (activeReplyData) payload.replyTo = activeReplyData;
+              push(messagesRef, payload);
+              activeReplyData = null;
+              replyBar.style.display = 'none';
+            };
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          recordBtn.innerText = "⏹️";
+          recordBtn.classList.add('recording');
+          msgInput.placeholder = "Sedang merekam suara...";
+          msgInput.disabled = true;
+        } catch (err) {
+          alert("Izin mikrofon ditolak/tidak didukung.");
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.innerText = "🎤";
+        recordBtn.classList.remove('recording');
+        msgInput.placeholder = "Ketik pesan...";
+        msgInput.disabled = false;
+      }
+    });
+
+    // RENDER BALASAN (REPLY) PADA BUBBLE PESAN
+    function generateBubbleContent(data) {
+      let contentHtml = "";
+      if (data.replyTo) {
+        contentHtml += `
+          <div class="reply-preview-box">
+            <div class="reply-name">${data.replyTo.sender}</div>
+            <div>${data.replyTo.text}</div>
+          </div>
+        `;
+      }
+
+      if (data.type === "audio") {
+        contentHtml += `<audio controls src="${data.audio}"></audio>`;
+      } else {
+        contentHtml += `<span>${data.text}</span>`;
+      }
+
+      if (data.isEdited) {
+        contentHtml += `<span class="edited-tag">(diedit)</span>`;
+      }
+
+      return contentHtml;
+    }
+
+    // TAMPILKAN PESAN REALTIME
     onChildAdded(messagesRef, (snapshot) => {
       const msgId = snapshot.key;
       const data = snapshot.val();
@@ -199,32 +343,69 @@
       msgGroup.innerHTML = `
         <div class="msg-header">
           <span class="sender-name">${isMe ? 'Kamu (' + data.sender + ')' : data.sender}</span>
-          <button class="delete-btn" title="Hapus Pesan">🗑️</button>
+          <button class="action-icon reply-btn" title="Balas Pesan">↩️</button>
+          ${isMe && data.type === 'text' ? '<button class="action-icon edit-btn" title="Edit Pesan">✏️</button>' : ''}
+          <button class="action-icon delete-btn" title="Hapus Pesan Admin">🗑️</button>
         </div>
-        <div class="msg-bubble">${data.text}</div>
+        <div class="msg-bubble">${generateBubbleContent(data)}</div>
       `;
-      
-      // HAPUS PESAN DENGAN SANDI
-      const deleteBtn = msgGroup.querySelector('.delete-btn');
-      deleteBtn.addEventListener('click', () => {
-        const passwordInput = prompt("Masukkan Sandi Rahasia Admin untuk menghapus pesan ini:");
+
+      // LOGIKA TOMBOL REPLAY
+      msgGroup.querySelector('.reply-btn').addEventListener('click', () => {
+        activeReplyData = {
+          sender: data.sender,
+          text: data.type === 'audio' ? '🎵 Voice Note' : data.text
+        };
+        replyTargetName.innerText = data.sender;
+        replyTargetText.innerText = activeReplyData.text;
+        replyBar.style.display = 'flex';
+        msgInput.focus();
+      });
+
+      // LOGIKA TOMBOL EDIT (Hanya untuk pesan sendiri)
+      const editBtn = msgGroup.querySelector('.edit-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          const newText = prompt("Edit pesan kamu:", data.text);
+          if (newText !== null && newText.trim() !== "") {
+            update(ref(db, `messages/${msgId}`), {
+              text: newText.trim(),
+              isEdited: true
+            });
+          }
+        });
+      }
+
+      // LOGIKA HAPUS ADMIN
+      msgGroup.querySelector('.delete-btn').addEventListener('click', () => {
+        const passwordInput = prompt("Masukkan Sandi Rahasia Admin:");
         if (passwordInput === ADMIN_PASSWORD) {
           remove(ref(db, `messages/${msgId}`));
         } else if (passwordInput !== null) {
-          alert("Sandi Salah! Kamu tidak memiliki akses untuk menghapus pesan.");
+          alert("Sandi Salah!");
         }
       });
 
       msgContainer.appendChild(msgGroup);
       msgContainer.scrollTop = msgContainer.scrollHeight;
 
-      // BUNYI NOTIFIKASI
       if (!isMe && !isInitialLoad) {
         playNotificationSound();
       }
     });
 
-    // HAPUS PESAN SECARA REALTIME
+    // UPDATE TAMPILAN JIKA PESAN DIEDIT
+    onChildChanged(messagesRef, (snapshot) => {
+      const msgId = snapshot.key;
+      const data = snapshot.val();
+      const msgGroup = document.getElementById(`msg-${msgId}`);
+      if (msgGroup) {
+        const bubble = msgGroup.querySelector('.msg-bubble');
+        bubble.innerHTML = generateBubbleContent(data);
+      }
+    });
+
+    // HAPUS PESAN
     onChildRemoved(messagesRef, (snapshot) => {
       const msgId = snapshot.key;
       const elementToRemove = document.getElementById(`msg-${msgId}`);
