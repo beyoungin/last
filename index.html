@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chit-chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: #0b0f19; color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
+    
+    .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 450px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    
+    /* 1. POPUP MASUKKAN NAMA */
+    .name-modal { position: absolute; inset: 0; background: #151d2a; z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
+    .name-modal h3 { font-size: 1.3rem; color: #f8fafc; margin-bottom: 0.5rem; }
+    .name-modal p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.5rem; }
+    .name-modal input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.95rem; text-align: center; margin-bottom: 1rem; outline: none; }
+    .name-modal input:focus { border-color: #38bdf8; }
+    .name-modal button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .name-modal button:hover { background: #7dd3fc; }
+
+    /* HEADER */
+    .chat-header { background: rgba(0, 0, 0, 0.3); padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; }
+    .chat-header h2 { font-size: 1.1rem; color: #f8fafc; }
+    .chat-header p { font-size: 0.8rem; color: #38bdf8; font-weight: 600; margin-top: 0.2rem; }
+
+    /* AREA PESAN */
+    .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+    
+    .msg-group { display: flex; flex-direction: column; max-width: 80%; }
+    
+    /* Header Pesan (Nama + Tombol Hapus) */
+    .msg-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
+    .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; }
+    .delete-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; opacity: 0.5; transition: 0.2s; }
+    .delete-btn:hover { opacity: 1; transform: scale(1.1); }
+
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; }
+
+    /* PESAN KAMU (BIRU - KANAN) */
+    .msg-group.me { align-self: flex-end; }
+    .msg-group.me .msg-header { justify-content: flex-end; }
+    .msg-group.me .sender-name { color: #60a5fa; }
+    .msg-group.me .msg-bubble { background: #2563eb; color: #ffffff; border-bottom-right-radius: 2px; }
+
+    /* PESAN LAWAN BICARA (HIJAU/TEAL - KIRI) */
+    .msg-group.them { align-self: flex-start; }
+    .msg-group.them .msg-header { justify-content: flex-start; }
+    .msg-group.them .sender-name { color: #34d399; }
+    .msg-group.them .msg-bubble { background: #0f766e; color: #f0fdf4; border-bottom-left-radius: 2px; }
+
+    /* INPUT FORM */
+    .chat-input { padding: 0.8rem; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.5rem; }
+    .chat-input input { flex: 1; padding: 0.7rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.88rem; outline: none; }
+    .chat-input input:focus { border-color: #38bdf8; }
+    .chat-input button { background: #38bdf8; color: #0b0f19; border: none; padding: 0 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="chat-card">
+    <!-- POPUP INPUT NAMA -->
+    <div class="name-modal" id="name-modal">
+      <h3>Masukkan Nama Kamu</h3>
+      <p>Nama ini akan muncul di atas pesan yang kamu kirim.</p>
+      <input type="text" id="username-input" placeholder="Contoh: Hilda" maxlength="15" autocomplete="off">
+      <button id="join-btn">Mulai Chat</button>
+    </div>
+
+    <!-- RUANG CHAT -->
+    <div class="chat-header">
+      <h2>Ruang Chat Realtime</h2>
+      <p id="user-info">Belum masuk</p>
+    </div>
+    
+    <div class="chat-messages" id="messages-container"></div>
+    
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
+      <button id="send-btn">Kirim</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // ⚠️ MASUKKAN DATABASE URL FIREBASE-MU DI SINI
+    const firebaseConfig = {
+      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, 'messages');
+
+    let currentUsername = "";
+    const ADMIN_PASSWORD = "jedutitil"; // SANDI RAHASIA ADMIN
+
+    // ELEMEN UI
+    const modal = document.getElementById('name-modal');
+    const usernameInput = document.getElementById('username-input');
+    const joinBtn = document.getElementById('join-btn');
+    const userInfo = document.getElementById('user-info');
+    const msgContainer = document.getElementById('messages-container');
+    const msgInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // LOGIKA MASUK NAMA
+    joinBtn.addEventListener('click', () => {
+      const name = usernameInput.value.trim();
+      if (name !== "") {
+        currentUsername = name;
+        userInfo.innerText = `Kamu: ${currentUsername}`;
+        modal.style.display = 'none';
+      }
+    });
+
+    // LOGIKA KIRIM PESAN
+    function sendMessage() {
+      const text = msgInput.value.trim();
+      if (text !== "" && currentUsername !== "") {
+        push(messagesRef, {
+          sender: currentUsername,
+          text: text,
+          timestamp: Date.now()
+        });
+        msgInput.value = "";
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    msgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // LOGIKA TAMPILKAN PESAN REALTIME
+    onChildAdded(messagesRef, (snapshot) => {
+      const msgId = snapshot.key;
+      const data = snapshot.val();
+      const isMe = data.sender === currentUsername;
+      
+      const msgGroup = document.createElement('div');
+      msgGroup.classList.add('msg-group', isMe ? 'me' : 'them');
+      msgGroup.setAttribute('id', `msg-${msgId}`);
+      
+      msgGroup.innerHTML = `
+        <div class="msg-header">
+          <span class="sender-name">${isMe ? 'Kamu (' + data.sender + ')' : data.sender}</span>
+          <button class="delete-btn" title="Hapus Pesan">🗑️</button>
+        </div>
+        <div class="msg-bubble">${data.text}</div>
+      `;
+      
+      // LOGIKA HAPUS PESAN DENGAN SANDI
+      const deleteBtn = msgGroup.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', () => {
+        const passwordInput = prompt("Masukkan Sandi Rahasia Admin untuk menghapus pesan ini:");
+        if (passwordInput === ADMIN_PASSWORD) {
+          remove(ref(db, `messages/${msgId}`));
+        } else if (passwordInput !== null) {
+          alert("Sandi Salah! Kamu tidak memiliki akses untuk menghapus pesan.");
+        }
+      });
+
+      msgContainer.appendChild(msgGroup);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    });
+
+    // LOGIKA HAPUS PESAN DARI LAYAR SECARA REALTIME
+    onChildRemoved(messagesRef, (snapshot) => {
+      const msgId = snapshot.key;
+      const elementToRemove = document.getElementById(`msg-${msgId}`);
+      if (elementToRemove) {
+        elementToRemove.remove();
+      }
+    });
+  </script>
+</body>
+</html>
