@@ -11,7 +11,7 @@
     
     .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 450px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     
-    /* 1. POPUP MASUKKAN NAMA */
+    /* POPUP MASUKKAN NAMA */
     .name-modal { position: absolute; inset: 0; background: #151d2a; z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
     .name-modal h3 { font-size: 1.3rem; color: #f8fafc; margin-bottom: 0.5rem; }
     .name-modal p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.5rem; }
@@ -21,16 +21,19 @@
     .name-modal button:hover { background: #7dd3fc; }
 
     /* HEADER */
-    .chat-header { background: rgba(0, 0, 0, 0.3); padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center; }
-    .chat-header h2 { font-size: 1.1rem; color: #f8fafc; }
-    .chat-header p { font-size: 0.8rem; color: #38bdf8; font-weight: 600; margin-top: 0.2rem; }
+    .chat-header { background: rgba(0, 0, 0, 0.3); padding: 0.8rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; }
+    .chat-header-info h2 { font-size: 1rem; color: #f8fafc; }
+    .chat-header-info p { font-size: 0.78rem; color: #38bdf8; font-weight: 600; margin-top: 0.1rem; }
+    
+    /* Tombol Ganti Nama */
+    .change-name-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
+    .change-name-btn:hover { background: rgba(255,255,255,0.15); color: #f8fafc; }
 
     /* AREA PESAN */
     .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
     
     .msg-group { display: flex; flex-direction: column; max-width: 80%; }
     
-    /* Header Pesan (Nama + Tombol Hapus) */
     .msg-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
     .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; }
     .delete-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; opacity: 0.5; transition: 0.2s; }
@@ -63,15 +66,18 @@
     <!-- POPUP INPUT NAMA -->
     <div class="name-modal" id="name-modal">
       <h3>Masukkan Nama Kamu</h3>
-      <p>Nama ini akan muncul di atas pesan yang kamu kirim.</p>
-      <input type="text" id="username-input" placeholder="Contoh: Hilda" maxlength="15" autocomplete="off">
+      <p>Nama ini akan tersimpan otomatis di devicemu.</p>
+      <input type="text" id="username-input" placeholder="Contoh: biong" maxlength="15" autocomplete="off">
       <button id="join-btn">Mulai Chat</button>
     </div>
 
     <!-- RUANG CHAT -->
     <div class="chat-header">
-      <h2>Ruang Chat Realtime</h2>
-      <p id="user-info">Belum masuk</p>
+      <div class="chat-header-info">
+        <h2>Ruang Chat Realtime</h2>
+        <p id="user-info">Belum masuk</p>
+      </div>
+      <button class="change-name-btn" id="change-name-btn">Ganti Nama</button>
     </div>
     
     <div class="chat-messages" id="messages-container"></div>
@@ -96,10 +102,20 @@
     const messagesRef = ref(db, 'messages');
 
     let currentUsername = "";
-    const ADMIN_PASSWORD = "jedutitil"; // SANDI RAHASIA ADMIN
-    let isInitialLoad = true; // Flag penanda pesan lama saat web dibuka
+    const ADMIN_PASSWORD = "jedutitil"; 
+    let isInitialLoad = true;
 
-    // FUNGSI MEMBUNYIKAN NOTIFIKASI SUARA (WEB AUDIO API)
+    // ELEMEN UI
+    const modal = document.getElementById('name-modal');
+    const usernameInput = document.getElementById('username-input');
+    const joinBtn = document.getElementById('join-btn');
+    const changeNameBtn = document.getElementById('change-name-btn');
+    const userInfo = document.getElementById('user-info');
+    const msgContainer = document.getElementById('messages-container');
+    const msgInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // FUNGSI MEMBUNYIKAN NOTIFIKASI
     function playNotificationSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -107,9 +123,8 @@
         const gain = audioCtx.createGain();
 
         osc.type = "sine";
-        // Frekuensi suara "ting" yang halus
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); 
 
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
@@ -120,30 +135,37 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.5);
       } catch (e) {
-        console.log("Browser memblokir audio otomatis");
+        console.log("Audio diblokir browser");
       }
     }
 
-    // ELEMEN UI
-    const modal = document.getElementById('name-modal');
-    const usernameInput = document.getElementById('username-input');
-    const joinBtn = document.getElementById('join-btn');
-    const userInfo = document.getElementById('user-info');
-    const msgContainer = document.getElementById('messages-container');
-    const msgInput = document.getElementById('message-input');
-    const sendBtn = document.getElementById('send-btn');
+    // FUNGSI SET NAMA
+    function setUsername(name) {
+      currentUsername = name;
+      localStorage.setItem('saved_chat_username', name); // SIMPAN PERMANEN DI DEVICE
+      userInfo.innerText = `Kamu: ${currentUsername}`;
+      modal.style.display = 'none';
+      setTimeout(() => { isInitialLoad = false; }, 1000);
+    }
 
-    // LOGIKA MASUK NAMA
+    // CEK APAKAH DEVICE INI SUDAH PUNYA NAMA TERSIMPAN
+    const savedName = localStorage.getItem('saved_chat_username');
+    if (savedName) {
+      setUsername(savedName);
+    }
+
+    // LOGIKA TOMBOL MASUK NAMA
     joinBtn.addEventListener('click', () => {
       const name = usernameInput.value.trim();
       if (name !== "") {
-        currentUsername = name;
-        userInfo.innerText = `Kamu: ${currentUsername}`;
-        modal.style.display = 'none';
-        
-        // Mematikan mode muat awal setelah 1 detik
-        setTimeout(() => { isInitialLoad = false; }, 1000);
+        setUsername(name);
       }
+    });
+
+    // LOGIKA TOMBOL GANTI NAMA
+    changeNameBtn.addEventListener('click', () => {
+      usernameInput.value = currentUsername;
+      modal.style.display = 'flex';
     });
 
     // LOGIKA KIRIM PESAN
@@ -164,7 +186,7 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // LOGIKA TAMPILKAN PESAN REALTIME & NOTIFIKASI
+    // LOGIKA TAMPILKAN PESAN REALTIME
     onChildAdded(messagesRef, (snapshot) => {
       const msgId = snapshot.key;
       const data = snapshot.val();
@@ -196,7 +218,7 @@
       msgContainer.appendChild(msgGroup);
       msgContainer.scrollTop = msgContainer.scrollHeight;
 
-      // BUNYIKAN SUARA NOTIFIKASI (Hanya jika pesan baru dan dikirim dari lawan bicara)
+      // BUNYI NOTIFIKASI
       if (!isMe && !isInitialLoad) {
         playNotificationSound();
       }
