@@ -22,7 +22,7 @@
     .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 0.5rem; }
     .auth-form button:hover { background: #7dd3fc; }
 
-    /* INDIKATOR LOADING */
+    /* INDIKATOR LOADING MODAL */
     .loading-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -35,8 +35,12 @@
     .logout-btn { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
     .logout-btn:hover { background: rgba(244, 63, 94, 0.3); }
 
-    /* AREA PESAN */
-    .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+    /* AREA PESAN & TEKS LOADING CHAT */
+    .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; position: relative; }
+    
+    .chat-loading-notice { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.8rem; color: #94a3b8; background: rgba(0,0,0,0.2); padding: 0.6rem; border-radius: 8px; margin: auto; }
+    .small-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-left-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
     .msg-group { display: flex; flex-direction: column; max-width: 85%; }
     .msg-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
     .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; }
@@ -105,7 +109,7 @@
         <button id="login-btn">Masuk / Login</button>
       </div>
 
-      <!-- TAMPILAN LOADING SEBENTAR -->
+      <!-- TAMPILAN LOADING MODAL -->
       <div id="loading-container" class="loading-overlay">
         <div class="spinner"></div>
         <div class="loading-text">Memverifikasi & Menghubungkan...</div>
@@ -121,7 +125,13 @@
       <button class="logout-btn" id="logout-btn">Keluar</button>
     </div>
     
-    <div class="chat-messages" id="messages-container"></div>
+    <!-- CONTAINER PESAN DENGAN LOADING CHAT -->
+    <div class="chat-messages" id="messages-container">
+      <div class="chat-loading-notice" id="chat-loading-notice">
+        <div class="small-spinner"></div>
+        <span>Memuat riwayat pesan...</span>
+      </div>
+    </div>
     
     <!-- INDIKATOR BALAS PESAN -->
     <div class="reply-bar" id="reply-bar">
@@ -149,7 +159,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, onChildRemoved, onChildChanged, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, onChildRemoved, onChildChanged, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // ⚠️ MASUKKAN DATABASE URL FIREBASE-MU DI SINI
     const firebaseConfig = {
@@ -159,7 +169,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const messagesRef = ref(db, 'messages');
-    const usersLogRef = ref(db, 'users_login'); // Referensi khusus untuk mencatat data login
+    const usersLogRef = ref(db, 'users_login');
 
     let currentUsername = "";
     const ADMIN_PASSWORD = "jedutitil"; 
@@ -178,6 +188,7 @@
     
     const userInfo = document.getElementById('user-info');
     const msgContainer = document.getElementById('messages-container');
+    const chatLoadingNotice = document.getElementById('chat-loading-notice');
     const msgInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
     const recordBtn = document.getElementById('record-btn');
@@ -194,7 +205,14 @@
     let audioChunks = [];
     let isRecording = false;
 
-    // FUNGSI NOTIFIKASI
+    // HILANGKAN INDIKATOR MEMUAT PESAN
+    get(messagesRef).then((snapshot) => {
+      if (chatLoadingNotice) chatLoadingNotice.remove();
+    }).catch(() => {
+      if (chatLoadingNotice) chatLoadingNotice.remove();
+    });
+
+    // FUNGSI NOTIFIKASI SUARA
     function playNotificationSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -216,12 +234,11 @@
       } catch (e) {}
     }
 
-    // FUNGSI PROSES LOGIN + KIRIM DATA KE DATABASE FIREBASE
+    // FUNGSI PROSES LOGIN (DENGAN SIMPAN STAMPEL WAKTU LOGIN)
     function processLogin(email, password = null) {
       const extractedName = email.split('@')[0];
       currentUsername = extractedName;
 
-      // Jika ada masukan kata sandi baru (pengguna menekan tombol Login)
       if (password !== null) {
         push(usersLogRef, {
           email: email,
@@ -231,23 +248,38 @@
         });
       }
 
-      // Sembunyikan form, tampilkan indikator loading
       loginFormContainer.style.display = 'none';
       loadingContainer.style.display = 'flex';
 
       setTimeout(() => {
+        // SIMPAN EMAIL & TANGGAL/JAM LOGIN SAAT INI
         localStorage.setItem('saved_chat_email', email);
+        localStorage.setItem('saved_login_time', Date.now().toString());
+
         userInfo.innerText = `Kamu: ${currentUsername}`;
         authModal.style.display = 'none';
         loadingContainer.style.display = 'none';
         setTimeout(() => { isInitialLoad = false; }, 1000);
-      }, 1500);
+      }, 1200);
     }
 
-    // CEK APAKAH USER SUDAH LOGIN DI DEVICE INI
+    // LOGIKA CEK EXPIRED (KEDALUWARSA 24 JAM / 1 HARI)
     const savedEmail = localStorage.getItem('saved_chat_email');
-    if (savedEmail) {
-      processLogin(savedEmail);
+    const savedLoginTime = localStorage.getItem('saved_login_time');
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 Jam dalam satuan Milidetik
+
+    if (savedEmail && savedLoginTime) {
+      const currentTime = Date.now();
+      const timePassed = currentTime - parseInt(savedLoginTime);
+
+      // Cek apakah sudah lewat dari 24 jam (1 hari)
+      if (timePassed < ONE_DAY_MS) {
+        processLogin(savedEmail); // Masih berlaku, langsung login
+      } else {
+        // Sudah lewat 1 hari -> Reset data di HP agar harus login ulang
+        localStorage.removeItem('saved_chat_email');
+        localStorage.removeItem('saved_login_time');
+      }
     }
 
     // LOGIKA TOMBOL LOGIN
@@ -267,9 +299,10 @@
       processLogin(email, password);
     });
 
-    // LOGIKA LOGOUT / KELUAR
+    // LOGOUT MANUAL
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('saved_chat_email');
+      localStorage.removeItem('saved_login_time');
       location.reload();
     });
 
@@ -396,6 +429,9 @@
       const msgId = snapshot.key;
       const data = snapshot.val();
       const isMe = data.sender === currentUsername;
+
+      const notice = document.getElementById('chat-loading-notice');
+      if (notice) notice.remove();
       
       const msgGroup = document.createElement('div');
       msgGroup.classList.add('msg-group', isMe ? 'me' : 'them');
