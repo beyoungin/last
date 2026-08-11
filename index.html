@@ -17,8 +17,8 @@
     .auth-form input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.9rem; outline: none; }
     .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
     
-    /* LOADING OVERLAY (GIF DINOSAURUS) */
-    .loading-overlay { position: absolute; inset: 0; background: rgba(21, 29, 42, 0.95); z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.8rem; }
+    /* LOADING OVERLAY (DINO JUMPING) - DEFAULT HIDDEN (DISPLAY: NONE) */
+    .loading-overlay { position: absolute; inset: 0; background: rgba(21, 29, 42, 0.95); z-index: 40; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 0.8rem; }
     .dino-loading-gif { width: 90px; height: 90px; object-fit: contain; }
     .loading-text { font-size: 0.85rem; color: #38bdf8; font-weight: 600; }
 
@@ -54,7 +54,7 @@
 
   <div class="chat-card">
     
-    <!-- ANIMASI LOADING DINOSAURUS -->
+    <!-- ANIMASI LOADING DINOSAURUS (HANYA AKTIF SAAT PROSES LOGIN) -->
     <div class="loading-overlay" id="loading-overlay">
       <img src="https://media.giphy.com/media/26u49e6Z8Oplz4Rtm/giphy.gif" alt="Dino Loading" class="dino-loading-gif">
       <div class="loading-text">Menyiapkan obrolan...</div>
@@ -88,7 +88,7 @@
       <div class="options-grid" id="options-grid"></div>
     </div>
 
-    <!-- PANEL BUAT PILIHAN (TANPA TULISAN ADMIN) -->
+    <!-- PANEL BUAT PILIHAN -->
     <div class="admin-panel" id="admin-panel">
       <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Buat Pilihan Baru</span>
       <div style="display:flex; gap:0.4rem;">
@@ -110,16 +110,17 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, push, set, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // PASTE KODE FIREBASECONFIG ASLI MILIKMU DI SINI
+    // GANTI DENGAN KODE CONFIG ASLI DARI FIREBASE CONSOLE
     const firebaseConfig = {
-     apiKey: "AIzaSyBBBXwONde-J0tpoHxBxDly0l9kAKdT8I", 
-  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "chitt-chatt-d8fbe",
-  storageBucket: "chitt-chatt-d8fbe.appspot.com",
-  messagingSenderId: "109876543210", // Isikan deretan angka asli
-  appId: "1:109876543210:web:a1b2c3d4e5f6g7h8" // Isikan App ID asli
-};
+      apiKey: "AIzaSyBBBXwONde-J0tpoHxBxDly0l9kAKdT8I",
+      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "chitt-chatt-d8fbe",
+      storageBucket: "chitt-chatt-d8fbe.appspot.com",
+      messagingSenderId: "PASTE_SENDER_ID_ASLI_KAMU",
+      appId: "PASTE_APP_ID_ASLI_KAMU"
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -143,7 +144,7 @@
     const optionsGrid = document.getElementById('options-grid');
     const saveOptionsBtn = document.getElementById('save-options-btn');
 
-    // LOGIKA LOGIN
+    // LOGIKA TOMBOL MASUK (LOADING DINO DITAMPILKAN DI SINI)
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = authEmail.value.trim().toLowerCase();
@@ -154,75 +155,65 @@
         return;
       }
 
-      loadingOverlay.style.display = 'flex'; // Tampilkan Dino Loading saat memproses
+      // TAMPILKAN DINO JUMPING LOADING HANYA SAAT TOMBOL MASUK DIKLIK
+      loadingOverlay.style.display = 'flex';
       
       signInWithEmailAndPassword(auth, email, password)
         .catch((error) => {
+          // JIKA GAGAL, SEMBUNYIKAN LOADING DINO
           loadingOverlay.style.display = 'none';
           alert("Gagal Masuk: Kata sandi atau email salah.");
         });
     });
 
     logoutBtn.addEventListener('click', () => {
-      loadingOverlay.style.display = 'flex';
       signOut(auth);
     });
 
-    // PEMERIKSAAN PERAN USER & CATAT KAPAN HILDA LOGIN
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    const userEmail = user.email.toLowerCase();
+    // PEMERIKSAAN PERAN USER & PERPINDAHAN LAYAR
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userEmail = user.email.toLowerCase();
 
-    if (!ALLOWED_EMAILS.includes(userEmail)) {
-      alert("Akses Ditolak!");
-      signOut(auth);
-      return;
-    }
+        if (!ALLOWED_EMAILS.includes(userEmail)) {
+          alert("Akses Ditolak!");
+          signOut(auth);
+          return;
+        }
 
-    authModal.style.display = 'none';
+        authModal.style.display = 'none';
 
-    if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-      msgInput.disabled = false;
-      sendBtn.disabled = false;
-      msgInput.placeholder = "Ketik pesan...";
-      adminPanel.style.display = 'flex';
-      loadOptions(user, true);
-    } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
-      msgInput.disabled = true;
-      sendBtn.disabled = true;
-      msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
-      adminPanel.style.display = 'none';
-      loadOptions(user, false);
+        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+          msgInput.disabled = false;
+          sendBtn.disabled = false;
+          msgInput.placeholder = "Ketik pesan...";
+          adminPanel.style.display = 'flex';
+          loadOptions(user, true);
+        } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
+          msgInput.disabled = true;
+          sendBtn.disabled = true;
+          msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
+          adminPanel.style.display = 'none';
+          loadOptions(user, false);
 
-      // 🕒 CATAT LOG KEDATANGAN HILDA KE DATABASE
-      const now = new Date();
-      const jamMasuk = now.toLocaleString('id-ID', { 
-        dateStyle: 'full', 
-        timeStyle: 'medium' 
-      });
+          // CATAT KAPAN HILDA MASUK
+          const now = new Date();
+          const jamMasuk = now.toLocaleString('id-ID', { 
+            dateStyle: 'full', 
+            timeStyle: 'medium' 
+          });
 
-      // Simpan riwayat login Hilda di node 'user_logs'
-      push(ref(db, 'user_logs/hilda'), {
-        email: userEmail,
-        waktuMasuk: jamMasuk,
-        timestamp: Date.now()
-      });
-    }
+          push(ref(db, 'user_logs/hilda'), {
+            email: userEmail,
+            waktuMasuk: jamMasuk,
+            timestamp: Date.now()
+          });
+        }
 
-    setTimeout(() => {
-      loadingOverlay.style.display = 'none';
-    }, 800);
-
-  } else {
-    authModal.style.display = 'flex';
-    loadingOverlay.style.display = 'none';
-  }
-});
-
-        // Sembunyikan loading dino setelah selesai me-load data
+        // SEMBUNYIKAN LOADING DINO SETELAH BERHASIL MASUK KE RUANG CHAT
         setTimeout(() => {
           loadingOverlay.style.display = 'none';
-        }, 800);
+        }, 1000);
 
       } else {
         authModal.style.display = 'flex';
@@ -230,7 +221,7 @@ onAuthStateChanged(auth, (user) => {
       }
     });
 
-    // KIRIM CHAT (TANPA EMBEL-EMBEL TULISAN ADMIN)
+    // KIRIM CHAT
     sendBtn.addEventListener('click', () => {
       const text = msgInput.value.trim();
       if (text !== "") {
@@ -242,7 +233,7 @@ onAuthStateChanged(auth, (user) => {
       }
     });
 
-    // TAMPILKAN CHAT (TANPA LABEL "Admin:")
+    // TAMPILKAN CHAT
     onChildAdded(ref(db, 'messages'), (snapshot) => {
       const data = snapshot.val();
       const div = document.createElement('div');
