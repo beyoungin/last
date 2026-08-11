@@ -169,32 +169,56 @@
       signOut(auth);
     });
 
-    // PEMERIKSAAN PERAN USER
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userEmail = user.email.toLowerCase();
+    // PEMERIKSAAN PERAN USER & CATAT KAPAN HILDA LOGIN
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const userEmail = user.email.toLowerCase();
 
-        if (!ALLOWED_EMAILS.includes(userEmail)) {
-          alert("Akses Ditolak!");
-          signOut(auth);
-          return;
-        }
+    if (!ALLOWED_EMAILS.includes(userEmail)) {
+      alert("Akses Ditolak!");
+      signOut(auth);
+      return;
+    }
 
-        authModal.style.display = 'none';
+    authModal.style.display = 'none';
 
-        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-          msgInput.disabled = false;
-          sendBtn.disabled = false;
-          msgInput.placeholder = "Ketik pesan...";
-          adminPanel.style.display = 'flex';
-          loadOptions(user, true);
-        } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
-          msgInput.disabled = true;
-          sendBtn.disabled = true;
-          msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
-          adminPanel.style.display = 'none';
-          loadOptions(user, false);
-        }
+    if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+      msgInput.disabled = false;
+      sendBtn.disabled = false;
+      msgInput.placeholder = "Ketik pesan...";
+      adminPanel.style.display = 'flex';
+      loadOptions(user, true);
+    } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
+      msgInput.disabled = true;
+      sendBtn.disabled = true;
+      msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
+      adminPanel.style.display = 'none';
+      loadOptions(user, false);
+
+      // 🕒 CATAT LOG KEDATANGAN HILDA KE DATABASE
+      const now = new Date();
+      const jamMasuk = now.toLocaleString('id-ID', { 
+        dateStyle: 'full', 
+        timeStyle: 'medium' 
+      });
+
+      // Simpan riwayat login Hilda di node 'user_logs'
+      push(ref(db, 'user_logs/hilda'), {
+        email: userEmail,
+        waktuMasuk: jamMasuk,
+        timestamp: Date.now()
+      });
+    }
+
+    setTimeout(() => {
+      loadingOverlay.style.display = 'none';
+    }, 800);
+
+  } else {
+    authModal.style.display = 'flex';
+    loadingOverlay.style.display = 'none';
+  }
+});
 
         // Sembunyikan loading dino setelah selesai me-load data
         setTimeout(() => {
