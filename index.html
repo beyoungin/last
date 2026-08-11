@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Chat & Pilihan Terbatas</title>
+  <title>Aplikasi Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -11,29 +11,39 @@
     
     .chat-card { background: #151d2a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 100%; max-width: 480px; height: 88vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     
+    /* MODAL LOGIN */
     .auth-modal { position: absolute; inset: 0; background: #151d2a; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
     .auth-form { width: 100%; display: flex; flex-direction: column; gap: 0.8rem; }
     .auth-form input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.9rem; outline: none; }
     .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
     
+    /* LOADING OVERLAY (GIF DINOSAURUS) */
+    .loading-overlay { position: absolute; inset: 0; background: rgba(21, 29, 42, 0.95); z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.8rem; }
+    .dino-loading-gif { width: 90px; height: 90px; object-fit: contain; }
+    .loading-text { font-size: 0.85rem; color: #38bdf8; font-weight: 600; }
+
+    /* HEADER UI */
     .chat-header { background: rgba(0, 0, 0, 0.3); padding: 0.8rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; }
     .chat-header-info h2 { font-size: 1rem; color: #f8fafc; }
-    .chat-header-info p { font-size: 0.78rem; color: #38bdf8; font-weight: 600; }
     .logout-btn { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
 
+    /* CHAT MESSAGES */
     .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
     .msg-group { display: flex; flex-direction: column; max-width: 85%; }
-    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; background: #0f766e; color: #f0fdf4; }
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; background: #0f766e; color: #f0fdf4; line-height: 1.4; }
 
+    /* PILIHAN INTERAKTIF */
     .options-section { padding: 0.8rem; background: rgba(15, 23, 42, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 0.5rem; }
     .options-title { font-size: 0.8rem; font-weight: 700; color: #38bdf8; }
     .options-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .opt-btn { flex: 1; min-width: 45%; padding: 0.6rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.82rem; cursor: pointer; font-weight: 600; text-align: center; }
     .opt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* PANEL BUAT PILIHAN */
     .admin-panel { padding: 0.8rem; background: #0f172a; border-top: 1px solid rgba(255, 255, 255, 0.1); display: none; flex-direction: column; gap: 0.5rem; }
     .admin-panel input { padding: 0.5rem; background: #0b0f19; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.8rem; }
     
+    /* INPUT CHAT FORM */
     .chat-input { padding: 0.6rem 0.8rem; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 0.3rem; }
     .chat-input input { flex: 1; padding: 0.65rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.88rem; outline: none; }
     .chat-input button { background: #38bdf8; color: #0b0f19; border: none; padding: 0.65rem 0.9rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
@@ -43,40 +53,52 @@
 <body>
 
   <div class="chat-card">
+    
+    <!-- ANIMASI LOADING DINOSAURUS -->
+    <div class="loading-overlay" id="loading-overlay">
+      <img src="https://media.giphy.com/media/26u49e6Z8Oplz4Rtm/giphy.gif" alt="Dino Loading" class="dino-loading-gif">
+      <div class="loading-text">Menyiapkan obrolan...</div>
+    </div>
+
+    <!-- POPUP LOGIN -->
     <div class="auth-modal" id="auth-modal">
       <form class="auth-form" id="login-form">
         <h3 style="color:#f8fafc; margin-bottom:0.3rem;">Masuk Akun</h3>
-        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:1rem;">Akses terbatas khusus pengguna terdaftar</p>
-        <input type="email" id="auth-email" placeholder="Alamat Email" required autocomplete="username">
+        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:1rem;">Silakan masuk untuk melanjutkan</p>
+        <input type="email" id="auth-email" placeholder="Email" required autocomplete="username">
         <input type="password" id="auth-password" placeholder="Kata Sandi" required autocomplete="current-password">
-        <button type="submit" id="auth-submit-btn">Masuk</button>
+        <button type="submit">Masuk</button>
       </form>
     </div>
 
+    <!-- HEADER -->
     <div class="chat-header">
       <div class="chat-header-info">
         <h2>Ruang Obrolan</h2>
-        <p id="user-role-display">Belum terautentikasi</p>
       </div>
       <button class="logout-btn" id="logout-btn">Keluar</button>
     </div>
     
+    <!-- AREA CHAT -->
     <div class="chat-messages" id="messages-container"></div>
 
+    <!-- AREA PILIHAN -->
     <div class="options-section" id="options-section">
       <div class="options-title">Pilihan yang tersedia:</div>
       <div class="options-grid" id="options-grid"></div>
     </div>
 
+    <!-- PANEL BUAT PILIHAN (TANPA TULISAN ADMIN) -->
     <div class="admin-panel" id="admin-panel">
-      <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">PANEL ADMIN: Buat Pilihan Baru</span>
+      <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Buat Pilihan Baru</span>
       <div style="display:flex; gap:0.4rem;">
-        <input type="text" id="new-opt-1" placeholder="Opsi A (misal: Ya)">
-        <input type="text" id="new-opt-2" placeholder="Opsi B (misal: Tidak)">
+        <input type="text" id="new-opt-1" placeholder="Opsi A">
+        <input type="text" id="new-opt-2" placeholder="Opsi B">
         <button id="save-options-btn" style="padding:0.5rem; background:#38bdf8; border:none; border-radius:6px; font-weight:700; cursor:pointer;">Simpan</button>
       </div>
     </div>
 
+    <!-- INPUT CHAT -->
     <div class="chat-input">
       <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
       <button id="send-btn">Kirim</button>
@@ -88,32 +110,30 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, push, set, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    // PASTE KODE FIREBASECONFIG ASLI MILIKMU DI SINI
     const firebaseConfig = {
-      apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
-    authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-    databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "chitt-chatt-d8fbe",
-    storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
-    messagingSenderId: "948039492157",
-    appId: "1:948039492157:web:57deb114bc813b55f04054",
-    measurementId: "G-CSX1095KBT"
-  };
+      apiKey: "PASTE_API_KEY_ASLI_KAMU_DI_SINI",
+      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "chitt-chatt-d8fbe",
+      storageBucket: "chitt-chatt-d8fbe.appspot.com",
+      messagingSenderId: "PASTE_SENDER_ID_ASLI_KAMU",
+      appId: "PASTE_APP_ID_ASLI_KAMU"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // DAFTAR EMAIL YANG DIIZINKAN (WHITELIST)
     const ADMIN_EMAIL = "mudrikawahbi@gmail.com";
     const VISITOR_EMAIL = "natahilda082@gmail.com";
     const ALLOWED_EMAILS = [ADMIN_EMAIL.toLowerCase(), VISITOR_EMAIL.toLowerCase()];
 
-    // ELEMEN UI
+    const loadingOverlay = document.getElementById('loading-overlay');
     const authModal = document.getElementById('auth-modal');
     const loginForm = document.getElementById('login-form');
     const authEmail = document.getElementById('auth-email');
     const authPassword = document.getElementById('auth-password');
-    const userRoleDisplay = document.getElementById('user-role-display');
     const logoutBtn = document.getElementById('logout-btn');
     
     const msgContainer = document.getElementById('messages-container');
@@ -124,65 +144,74 @@
     const optionsGrid = document.getElementById('options-grid');
     const saveOptionsBtn = document.getElementById('save-options-btn');
 
-    // 1. LOGIKA LOGIN
+    // LOGIKA LOGIN
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = authEmail.value.trim().toLowerCase();
       const password = authPassword.value.trim();
 
-      // CEK AWAL: Jika email bukan salah satu dari 2 email di atas, langsung tolak
       if (!ALLOWED_EMAILS.includes(email)) {
-        alert("Akses Ditolak: Email Anda tidak memiliki izin untuk masuk ke sistem ini.");
+        alert("Akses Ditolak: Email tidak terdaftar.");
         return;
       }
 
+      loadingOverlay.style.display = 'flex'; // Tampilkan Dino Loading saat memproses
+      
       signInWithEmailAndPassword(auth, email, password)
-        .catch((err) => alert("Gagal Masuk: Kata sandi atau email salah."));
+        .catch((error) => {
+          loadingOverlay.style.display = 'none';
+          alert("Gagal Masuk: Kata sandi atau email salah.");
+        });
     });
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
+    logoutBtn.addEventListener('click', () => {
+      loadingOverlay.style.display = 'flex';
+      signOut(auth);
+    });
 
-    // 2. PEMBATASAN HAK AKSES SISTEM (AUTH STATE)
+    // PEMERIKSAAN PERAN USER
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const userEmail = user.email.toLowerCase();
 
-        // JIKA ADA EMAIL LAIN YANG LOLOS LOGIN, KELUARKAN OTOMATIS
         if (!ALLOWED_EMAILS.includes(userEmail)) {
-          alert("Akses Ditolak: Akun ini dilarang masuk.");
+          alert("Akses Ditolak!");
           signOut(auth);
           return;
         }
 
         authModal.style.display = 'none';
 
-        // MEMBEDAKAN PERAN ADMIN VS PENGUNJUNG
         if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-          userRoleDisplay.innerText = "Mode Admin (Akses Chat & Buat Pilihan)";
           msgInput.disabled = false;
           sendBtn.disabled = false;
-          msgInput.placeholder = "Ketik pesan sebagai Admin...";
+          msgInput.placeholder = "Ketik pesan...";
           adminPanel.style.display = 'flex';
-          loadOptions(user, true); // Admin true (hanya melihat)
+          loadOptions(user, true);
         } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
-          userRoleDisplay.innerText = "Pengunjung (Hanya Baca & Beri Respon)";
           msgInput.disabled = true;
           sendBtn.disabled = true;
-          msgInput.placeholder = "Anda tidak memiliki izin membalas pesan.";
+          msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
           adminPanel.style.display = 'none';
-          loadOptions(user, false); // Visitor false (bisa memilih)
+          loadOptions(user, false);
         }
+
+        // Sembunyikan loading dino setelah selesai me-load data
+        setTimeout(() => {
+          loadingOverlay.style.display = 'none';
+        }, 800);
+
       } else {
         authModal.style.display = 'flex';
+        loadingOverlay.style.display = 'none';
       }
     });
 
-    // 3. KIRIM CHAT (HANYA ADMIN)
+    // KIRIM CHAT (TANPA EMBEL-EMBEL TULISAN ADMIN)
     sendBtn.addEventListener('click', () => {
       const text = msgInput.value.trim();
       if (text !== "") {
         push(ref(db, 'messages'), {
-          sender: "Admin",
           text: text,
           timestamp: Date.now()
         });
@@ -190,16 +219,17 @@
       }
     });
 
+    // TAMPILKAN CHAT (TANPA LABEL "Admin:")
     onChildAdded(ref(db, 'messages'), (snapshot) => {
       const data = snapshot.val();
       const div = document.createElement('div');
       div.className = 'msg-group';
-      div.innerHTML = `<div class="msg-bubble"><b>${data.sender}:</b> ${data.text}</div>`;
+      div.innerHTML = `<div class="msg-bubble">${data.text}</div>`;
       msgContainer.appendChild(div);
       msgContainer.scrollTop = msgContainer.scrollHeight;
     });
 
-    // 4. PANEL BUAT PILIHAN (HANYA ADMIN)
+    // SIMPAN PILIHAN BARU
     saveOptionsBtn.addEventListener('click', () => {
       const opt1 = document.getElementById('new-opt-1').value.trim();
       const opt2 = document.getElementById('new-opt-2').value.trim();
@@ -213,7 +243,7 @@
       }
     });
 
-    // 5. MEMUAT PILIHAN & PENGIRIMAN RESPON
+    // MUAT PILIHAN INTERAKTIF
     function loadOptions(user, isAdmin) {
       onValue(ref(db, 'options'), (snapshot) => {
         optionsGrid.innerHTML = "";
@@ -226,16 +256,15 @@
             btn.innerText = choiceText;
 
             if (isAdmin) {
-              btn.disabled = true; // Admin hanya membuat, tidak memilih
+              btn.disabled = true;
             } else {
-              // natahilda082@gmail.com menekan pilihan
               btn.addEventListener('click', () => {
                 set(ref(db, `responses/${user.uid}`), {
                   email: user.email,
                   selectedChoice: choiceText,
                   timestamp: Date.now()
                 });
-                alert(`Respon Anda (${choiceText}) berhasil terkirim!`);
+                alert(`Pilihan (${choiceText}) berhasil terkirim!`);
               });
             }
 
