@@ -56,7 +56,7 @@
     
     <!-- ANIMASI LOADING DINOSAURUS (HANYA AKTIF SAAT PROSES LOGIN) -->
     <div class="loading-overlay" id="loading-overlay">
-      <img src="https://media.giphy.com/media/26u49e6Z8Oplz4Rtm/giphy.gif" alt="Dino Loading" class="dino-loading-gif">
+      <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZmljcWFscXk0OHU1cm42ZjU3Y24zeW5iaGFmdnAxa3ByazZjayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26u49e6Z8Oplz4Rtm/giphy.gif" alt="Dino Loading" class="dino-loading-gif">
       <div class="loading-text">Menyiapkan obrolan...</div>
     </div>
 
@@ -112,14 +112,15 @@
 
     // GANTI DENGAN KODE CONFIG ASLI DARI FIREBASE CONSOLE
     const firebaseConfig = {
-      apiKey: "AIzaSyBBBXwONde-J0tpoHxBxDly0l9kAKdT8I",
-      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "chitt-chatt-d8fbe",
-      storageBucket: "chitt-chatt-d8fbe.appspot.com",
-      messagingSenderId: "PASTE_SENDER_ID_ASLI_KAMU",
-      appId: "PASTE_APP_ID_ASLI_KAMU"
-    };
+      apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
+  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chitt-chatt-d8fbe",
+  storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
+  messagingSenderId: "948039492157",
+  appId: "1:948039492157:web:57deb114bc813b55f04054",
+  measurementId: "G-CSX1095KBT"
+};
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
