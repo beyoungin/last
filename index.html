@@ -89,8 +89,14 @@
     import { getDatabase, ref, push, set, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
-      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
+      apiKey: "AIzaSy...", // 👈 Ini kunci yang wajib ada
+  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chitt-chatt-d8fbe",
+  storageBucket: "chitt-chatt-d8fbe.appspot.com",
+  messagingSenderId: "xxxxxxxxxxxx",
+  appId: "1:xxxxxxxxxxxx:web:xxxxxxxxxxxx"
+};
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
