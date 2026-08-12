@@ -153,10 +153,11 @@
       loadingOverlay.style.display = 'flex';
       
       signInWithEmailAndPassword(auth, email, password)
-        .catch((error) => {
-          loadingOverlay.style.display = 'none';
-          alert("Gagal Masuk: Kata sandi atau email salah.");
-        });
+  .catch((error) => {
+    loadingOverlay.style.display = 'none';
+    // MENAMPILKAN KODE ERROR ASLI DARI FIREBASE
+    alert("GAGAL LOGIN!\n\nKode Error: " + error.code + "\nPesan: " + error.message);
+  });
     });
 
     logoutBtn.addEventListener('click', () => {
