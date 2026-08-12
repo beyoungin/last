@@ -15,11 +15,10 @@
     .auth-modal { position: absolute; inset: 0; background: #151d2a; z-index: 30; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
     .auth-form { width: 100%; display: flex; flex-direction: column; gap: 0.8rem; }
     .auth-form input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.9rem; outline: none; }
-    .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
     
-    /* LOADING OVERLAY (DINO JUMPING) - DEFAULT HIDDEN (DISPLAY: NONE) */
-    .loading-overlay { position: absolute; inset: 0; background: rgba(21, 29, 42, 0.95); z-index: 40; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 0.8rem; }
-    .dino-loading-gif { width: 90px; height: 90px; object-fit: contain; }
+    /* LOADING OVERLAY (GIF JAMUR DANCE RESPONSIVE) */
+    .loading-overlay { position: absolute; inset: 0; background: #151d2a; z-index: 40; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 1rem; }
     .loading-text { font-size: 0.85rem; color: #38bdf8; font-weight: 600; }
 
     /* HEADER UI */
@@ -27,17 +26,15 @@
     .chat-header-info h2 { font-size: 1rem; color: #f8fafc; }
     .logout-btn { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
 
-    /* CHAT MESSAGES */
+    /* CHAT MESSAGES AREA */
     .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
     .msg-group { display: flex; flex-direction: column; max-width: 85%; }
-    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; background: #0f766e; color: #f0fdf4; line-height: 1.4; }
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; background: #0f766e; color: #f0fdf4; line-height: 1.4; word-break: break-word; }
 
-    /* PILIHAN INTERAKTIF */
-    .options-section { padding: 0.8rem; background: rgba(15, 23, 42, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 0.5rem; }
-    .options-title { font-size: 0.8rem; font-weight: 700; color: #38bdf8; }
-    .options-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .opt-btn { flex: 1; min-width: 45%; padding: 0.6rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.82rem; cursor: pointer; font-weight: 600; text-align: center; }
-    .opt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* PILIHAN PADA GELEMBUNG CHAT (INLINE CHOICES) */
+    .chat-options-container { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; background: rgba(0, 0, 0, 0.2); padding: 0.6rem; border-radius: 8px; }
+    .chat-opt-btn { width: 100%; padding: 0.6rem; background: #1e293b; border: 1px solid #38bdf8; border-radius: 6px; color: #38bdf8; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; }
+    .chat-opt-btn:disabled { opacity: 0.6; cursor: not-allowed; border-color: #334155; color: #94a3b8; }
 
     /* PANEL BUAT PILIHAN */
     .admin-panel { padding: 0.8rem; background: #0f172a; border-top: 1px solid rgba(255, 255, 255, 0.1); display: none; flex-direction: column; gap: 0.5rem; }
@@ -54,13 +51,13 @@
 
   <div class="chat-card">
     
-    <!-- ANIMASI LOADING DINOSAURUS (HANYA AKTIF SAAT PROSES LOGIN) -->
+    <!-- ANIMASI LOADING JAMUR DANCE -->
     <div class="loading-overlay" id="loading-overlay">
-  <div style="width: 120px; height: 120px; position: relative;">
-    <iframe src="https://giphy.com/embed/gi17LlMaqrQGuyJiyE" width="100%" height="100%" style="position:absolute; pointer-events:none;" frameBorder="0" class="giphy-embed"></iframe>
-  </div>
-  <div class="loading-text">Menyiapkan obrolan...</div>
-</div>
+      <div style="width: 120px; height: 120px; position: relative;">
+        <iframe src="https://giphy.com/embed/gi17LlMaqrQGuyJiyE" width="100%" height="100%" style="position:absolute; pointer-events:none;" frameBorder="0" class="giphy-embed"></iframe>
+      </div>
+      <div class="loading-text">Menyiapkan obrolan...</div>
+    </div>
 
     <!-- POPUP LOGIN -->
     <div class="auth-modal" id="auth-modal">
@@ -81,22 +78,16 @@
       <button class="logout-btn" id="logout-btn">Keluar</button>
     </div>
     
-    <!-- AREA CHAT -->
+    <!-- AREA CHAT (PESAN & PILIHAN ADA DI DALAM SINI SEKALIGUS) -->
     <div class="chat-messages" id="messages-container"></div>
 
-    <!-- AREA PILIHAN -->
-    <div class="options-section" id="options-section">
-      <div class="options-title">Pilihan yang tersedia:</div>
-      <div class="options-grid" id="options-grid"></div>
-    </div>
-
-    <!-- PANEL BUAT PILIHAN -->
+    <!-- PANEL BUAT PILIHAN BARU -->
     <div class="admin-panel" id="admin-panel">
-      <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Buat Pilihan Baru</span>
+      <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Kirim Pesan Opsi Baru</span>
       <div style="display:flex; gap:0.4rem;">
         <input type="text" id="new-opt-1" placeholder="Opsi A">
         <input type="text" id="new-opt-2" placeholder="Opsi B">
-        <button id="save-options-btn" style="padding:0.5rem; background:#38bdf8; border:none; border-radius:6px; font-weight:700; cursor:pointer;">Simpan</button>
+        <button id="save-options-btn" style="padding:0.5rem; background:#38bdf8; border:none; border-radius:6px; font-weight:700; cursor:pointer;">Kirim</button>
       </div>
     </div>
 
@@ -110,19 +101,18 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, push, set, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // GANTI DENGAN KODE CONFIG ASLI DARI FIREBASE CONSOLE
     const firebaseConfig = {
-      apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
-  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "chitt-chatt-d8fbe",
-  storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
-  messagingSenderId: "948039492157",
-  appId: "1:948039492157:web:57deb114bc813b55f04054",
-  measurementId: "G-CSX1095KBT"
-};
+      apiKey: "AIzaSyBBBXwONde-J0tpoHxBxDly0l9kAKdT8I",
+      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "chitt-chatt-d8fbe",
+      storageBucket: "chitt-chatt-d8fbe.appspot.com",
+      messagingSenderId: "PASTE_SENDER_ID_ASLI_KAMU",
+      appId: "PASTE_APP_ID_ASLI_KAMU"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -144,10 +134,11 @@
     const sendBtn = document.getElementById('send-btn');
     
     const adminPanel = document.getElementById('admin-panel');
-    const optionsGrid = document.getElementById('options-grid');
     const saveOptionsBtn = document.getElementById('save-options-btn');
 
-    // LOGIKA TOMBOL MASUK (LOADING DINO DITAMPILKAN DI SINI)
+    let currentUser = null;
+
+    // LOGIKA TOMBOL MASUK
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = authEmail.value.trim().toLowerCase();
@@ -158,12 +149,11 @@
         return;
       }
 
-      // TAMPILKAN DINO JUMPING LOADING HANYA SAAT TOMBOL MASUK DIKLIK
+      // TAMPILKAN GIF LOADING DULU
       loadingOverlay.style.display = 'flex';
       
       signInWithEmailAndPassword(auth, email, password)
         .catch((error) => {
-          // JIKA GAGAL, SEMBUNYIKAN LOADING DINO
           loadingOverlay.style.display = 'none';
           alert("Gagal Masuk: Kata sandi atau email salah.");
         });
@@ -173,9 +163,10 @@
       signOut(auth);
     });
 
-    // PEMERIKSAAN PERAN USER & PERPINDAHAN LAYAR
+    // PEMERIKSAAN PERAN USER & LOG
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        currentUser = user;
         const userEmail = user.email.toLowerCase();
 
         if (!ALLOWED_EMAILS.includes(userEmail)) {
@@ -191,44 +182,36 @@
           sendBtn.disabled = false;
           msgInput.placeholder = "Ketik pesan...";
           adminPanel.style.display = 'flex';
-          loadOptions(user, true);
         } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
           msgInput.disabled = true;
           sendBtn.disabled = true;
           msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
           adminPanel.style.display = 'none';
-          loadOptions(user, false);
 
-          // CATAT KAPAN HILDA MASUK
+          // CATAT KAPAN HILDA LOGIN
           const now = new Date();
-          const jamMasuk = now.toLocaleString('id-ID', { 
-            dateStyle: 'full', 
-            timeStyle: 'medium' 
-          });
-
-          push(ref(db, 'user_logs/hilda'), {
-            email: userEmail,
-            waktuMasuk: jamMasuk,
-            timestamp: Date.now()
-          });
+          const jamMasuk = now.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' });
+          push(ref(db, 'user_logs/hilda'), { email: userEmail, waktuMasuk: jamMasuk, timestamp: Date.now() });
         }
 
-        // SEMBUNYIKAN LOADING DINO SETELAH BERHASIL MASUK KE RUANG CHAT
+        // TAMPILKAN GIF UNTUK BEBERAPA DETIK SAMPAI CHAT KELUAR SEMUA, BARU HILANGKAN
         setTimeout(() => {
           loadingOverlay.style.display = 'none';
-        }, 1000);
+        }, 1500);
 
       } else {
         authModal.style.display = 'flex';
         loadingOverlay.style.display = 'none';
+        msgContainer.innerHTML = "";
       }
     });
 
-    // KIRIM CHAT
+    // KIRIM CHAT TEKS biasa
     sendBtn.addEventListener('click', () => {
       const text = msgInput.value.trim();
       if (text !== "") {
         push(ref(db, 'messages'), {
+          type: 'text',
           text: text,
           timestamp: Date.now()
         });
@@ -236,60 +219,67 @@
       }
     });
 
-    // TAMPILKAN CHAT
-    onChildAdded(ref(db, 'messages'), (snapshot) => {
-      const data = snapshot.val();
-      const div = document.createElement('div');
-      div.className = 'msg-group';
-      div.innerHTML = `<div class="msg-bubble">${data.text}</div>`;
-      msgContainer.appendChild(div);
-      msgContainer.scrollTop = msgContainer.scrollHeight;
-    });
-
-    // SIMPAN PILIHAN BARU
+    // KIRIM CHAT YANG BERISI PILIHAN (CHOICES)
     saveOptionsBtn.addEventListener('click', () => {
       const opt1 = document.getElementById('new-opt-1').value.trim();
       const opt2 = document.getElementById('new-opt-2').value.trim();
 
       if (opt1 && opt2) {
-        set(ref(db, 'options'), {
-          choices: [opt1, opt2]
+        push(ref(db, 'messages'), {
+          type: 'choice',
+          choices: [opt1, opt2],
+          timestamp: Date.now()
         });
         document.getElementById('new-opt-1').value = "";
         document.getElementById('new-opt-2').value = "";
       }
     });
 
-    // MUAT PILIHAN INTERAKTIF
-    function loadOptions(user, isAdmin) {
-      onValue(ref(db, 'options'), (snapshot) => {
-        optionsGrid.innerHTML = "";
-        const data = snapshot.val();
+    // BACA SETIAP PESAN KELUAR DI AREA CHAT
+    onChildAdded(ref(db, 'messages'), (snapshot) => {
+      const data = snapshot.val();
+      const div = document.createElement('div');
+      div.className = 'msg-group';
 
-        if (data && data.choices) {
-          data.choices.forEach((choiceText) => {
-            const btn = document.createElement('button');
-            btn.className = 'opt-btn';
-            btn.innerText = choiceText;
+      if (data.type === 'choice' && data.choices) {
+        // JIKA PESAN BERISI PILIHAN INTERAKTIF
+        let optionsHTML = `<div class="msg-bubble">Silakan pilih salah satu opsi di bawah ini: <div class="chat-options-container">`;
+        
+        data.choices.forEach((choiceText, index) => {
+          optionsHTML += `<button class="chat-opt-btn" data-choice="${choiceText}">${choiceText}</button>`;
+        });
+        
+        optionsHTML += `</div></div>`;
+        div.innerHTML = optionsHTML;
 
-            if (isAdmin) {
-              btn.disabled = true;
+        // BIND EVENT KLIK PADA BUTTON PILIHAN (KHUSUS UNTUK HILDA)
+        setTimeout(() => {
+          const buttons = div.querySelectorAll('.chat-opt-btn');
+          buttons.forEach(btn => {
+            if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+              btn.disabled = true; // Admin tidak bisa ngeklik pilihan sendiri
             } else {
               btn.addEventListener('click', () => {
-                set(ref(db, `responses/${user.uid}`), {
-                  email: user.email,
-                  selectedChoice: choiceText,
+                const selected = btn.getAttribute('data-choice');
+                set(ref(db, `responses/${currentUser.uid}`), {
+                  email: currentUser.email,
+                  selectedChoice: selected,
                   timestamp: Date.now()
                 });
-                alert(`Pilihan (${choiceText}) berhasil terkirim!`);
+                alert(`Pilihan (${selected}) berhasil terkirim!`);
               });
             }
-
-            optionsGrid.appendChild(btn);
           });
-        }
-      });
-    }
+        }, 100);
+
+      } else {
+        // PESAN TEKS BIASA
+        div.innerHTML = `<div class="msg-bubble">${data.text}</div>`;
+      }
+
+      msgContainer.appendChild(div);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    });
   </script>
 </body>
 </html>
