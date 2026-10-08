@@ -122,15 +122,72 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, set, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
-      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "chitt-chatt-d8fbe",
-      storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
-      messagingSenderId: "948039492157",
-      appId: "1:948039492157:web:57deb114bc813b55f04054"
-    };
+    // Konfigurasi dengan garis miring di akhir URL
+const firebaseConfig = {
+  apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
+  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "chitt-chatt-d8fbe",
+  storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
+  messagingSenderId: "948039492157",
+  appId: "1:948039492157:web:57deb114bc813b55f04054"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Optimasi: Hilangkan delay setTimeout saat render pesan
+onChildAdded(ref(db, 'messages'), (snapshot) => {
+  const data = snapshot.val();
+  const div = document.createElement('div');
+  
+  const isMyMessage = data.senderEmail && data.senderEmail.toLowerCase() === currentUserEmail.toLowerCase();
+  div.className = `msg-group ${isMyMessage ? 'my-msg' : 'other-msg'}`;
+
+  const senderLabel = data.sender ? data.sender : (isMyMessage ? "Saya" : "Pengguna");
+
+  if (data.type === 'choice' && data.choices) {
+    let optionsHTML = `
+      <span class="msg-sender">${senderLabel}</span>
+      <div class="msg-bubble">Silakan pilih salah satu opsi di bawah ini: 
+        <div class="chat-options-container">`;
+    
+    data.choices.forEach((choiceText) => {
+      optionsHTML += `<button class="chat-opt-btn" data-choice="${choiceText}">${choiceText}</button>`;
+    });
+    
+    optionsHTML += `</div></div>`;
+    div.innerHTML = optionsHTML;
+
+    // Direct event listener tanpa setTimeout agar responsif
+    const buttons = div.querySelectorAll('.chat-opt-btn');
+    buttons.forEach(btn => {
+      if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
+        btn.disabled = true;
+      } else {
+        btn.addEventListener('click', () => {
+          const selected = btn.getAttribute('data-choice');
+          push(ref(db, 'responses/hilda_responses'), {
+            email: currentUserEmail,
+            selectedChoice: selected,
+            timestamp: Date.now(),
+            waktu: new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' })
+          });
+          alert(`Pilihan (${selected}) berhasil terkirim!`);
+        });
+      }
+    });
+
+  } else {
+    div.innerHTML = `
+      <span class="msg-sender">${senderLabel}</span>
+      <div class="msg-bubble">${data.text}</div>
+    `;
+  }
+
+  msgContainer.appendChild(div);
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+});
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
