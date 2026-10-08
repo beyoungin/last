@@ -35,14 +35,22 @@
     /* CHAT MESSAGES AREA */
     .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
     .msg-group { display: flex; flex-direction: column; max-width: 85%; }
-    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; background: #0f766e; color: #f0fdf4; line-height: 1.4; word-break: break-word; }
+    .msg-group.my-msg { align-self: flex-end; }
+    .msg-group.other-msg { align-self: flex-start; }
+    
+    .msg-sender { font-size: 0.68rem; color: #94a3b8; margin-bottom: 0.2rem; font-weight: 600; }
+    .my-msg .msg-sender { text-align: right; }
+    
+    .msg-bubble { padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.4; word-break: break-word; }
+    .my-msg .msg-bubble { background: #0284c7; color: #f0f9ff; border-bottom-right-radius: 2px; }
+    .other-msg .msg-bubble { background: #0f766e; color: #f0fdf4; border-bottom-left-radius: 2px; }
 
     /* PILIHAN PADA GELEMBUNG CHAT */
     .chat-options-container { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; background: rgba(0, 0, 0, 0.2); padding: 0.6rem; border-radius: 8px; }
     .chat-opt-btn { width: 100%; padding: 0.6rem; background: #1e293b; border: 1px solid #38bdf8; border-radius: 6px; color: #38bdf8; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; }
     .chat-opt-btn:disabled { opacity: 0.6; cursor: not-allowed; border-color: #334155; color: #94a3b8; }
 
-    /* PANEL BUAT PILIHAN BARU (ADMIN) */
+    /* PANEL BUAT PILIHAN BARU (KHUSUS ADMIN) */
     .admin-panel { padding: 0.8rem; background: #0f172a; border-top: 1px solid rgba(255, 255, 255, 0.1); display: none; flex-direction: column; gap: 0.5rem; }
     .admin-panel input { padding: 0.5rem; background: #0b0f19; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.8rem; }
     
@@ -65,7 +73,7 @@
       <div class="loading-text">Menyiapkan obrolan...</div>
     </div>
 
-    <!-- POPUP LOGIN (CUKUP USERNAME/EMAIL) -->
+    <!-- POPUP LOGIN -->
     <div class="auth-modal" id="auth-modal">
       <form class="auth-form" id="login-form">
         <h3 style="color:#f8fafc; margin-bottom:0.3rem;">WEB lagu eror da</h3>
@@ -93,7 +101,7 @@
     <!-- AREA CHAT -->
     <div class="chat-messages" id="messages-container"></div>
 
-    <!-- PANEL BUAT PILIHAN BARU (ADMIN) -->
+    <!-- PANEL BUAT PILIHAN BARU (KHUSUS ADMIN) -->
     <div class="admin-panel" id="admin-panel">
       <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Kirim Pesan Opsi Baru</span>
       <div style="display:flex; gap:0.4rem;">
@@ -157,15 +165,14 @@
 
       authModal.style.display = 'none';
 
+      // KEDUA PERAN SAMA-SAMA BISA MENGIRIM CHAT
+      msgInput.disabled = false;
+      sendBtn.disabled = false;
+      msgInput.placeholder = "Ketik pesan...";
+
       if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
-        msgInput.disabled = false;
-        sendBtn.disabled = false;
-        msgInput.placeholder = "Ketik pesan...";
         adminPanel.style.display = 'flex';
       } else if (currentUserEmail === VISITOR_EMAIL.toLowerCase()) {
-        msgInput.disabled = true;
-        sendBtn.disabled = true;
-        msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
         adminPanel.style.display = 'none';
 
         // Log Otomatis Masuk untuk Hilda
@@ -229,20 +236,28 @@
       location.reload();
     });
 
-    // KIRIM CHAT TEKS (ADMIN)
-    sendBtn.addEventListener('click', () => {
+    // KIRIM CHAT TEKS (BISA OLEH WAHBI & HILDA)
+    function sendTextMessage() {
       const text = msgInput.value.trim();
       if (text !== "") {
+        const senderName = currentUserEmail === ADMIN_EMAIL.toLowerCase() ? "Wahbi" : "Hilda";
         push(ref(db, 'messages'), {
           type: 'text',
           text: text,
+          sender: senderName,
+          senderEmail: currentUserEmail,
           timestamp: Date.now()
         });
         msgInput.value = "";
       }
+    }
+
+    sendBtn.addEventListener('click', sendTextMessage);
+    msgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendTextMessage();
     });
 
-    // KIRIM PILIHAN BARU (ADMIN)
+    // KIRIM PILIHAN BARU (KHUSUS ADMIN)
     saveOptionsBtn.addEventListener('click', () => {
       const opt1 = document.getElementById('new-opt-1').value.trim();
       const opt2 = document.getElementById('new-opt-2').value.trim();
@@ -251,6 +266,8 @@
         push(ref(db, 'messages'), {
           type: 'choice',
           choices: [opt1, opt2],
+          sender: "Wahbi",
+          senderEmail: ADMIN_EMAIL,
           timestamp: Date.now()
         });
         document.getElementById('new-opt-1').value = "";
@@ -262,10 +279,17 @@
     onChildAdded(ref(db, 'messages'), (snapshot) => {
       const data = snapshot.val();
       const div = document.createElement('div');
-      div.className = 'msg-group';
+      
+      const isMyMessage = data.senderEmail && data.senderEmail.toLowerCase() === currentUserEmail.toLowerCase();
+      div.className = `msg-group ${isMyMessage ? 'my-msg' : 'other-msg'}`;
+
+      const senderLabel = data.sender ? data.sender : (isMyMessage ? "Saya" : "Pengguna");
 
       if (data.type === 'choice' && data.choices) {
-        let optionsHTML = `<div class="msg-bubble">Silakan pilih salah satu opsi di bawah ini: <div class="chat-options-container">`;
+        let optionsHTML = `
+          <span class="msg-sender">${senderLabel}</span>
+          <div class="msg-bubble">Silakan pilih salah satu opsi di bawah ini: 
+            <div class="chat-options-container">`;
         
         data.choices.forEach((choiceText) => {
           optionsHTML += `<button class="chat-opt-btn" data-choice="${choiceText}">${choiceText}</button>`;
@@ -295,7 +319,10 @@
         }, 100);
 
       } else {
-        div.innerHTML = `<div class="msg-bubble">${data.text}</div>`;
+        div.innerHTML = `
+          <span class="msg-sender">${senderLabel}</span>
+          <div class="msg-bubble">${data.text}</div>
+        `;
       }
 
       msgContainer.appendChild(div);
