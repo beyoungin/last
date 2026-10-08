@@ -17,13 +17,13 @@
     .auth-form input { width: 100%; padding: 0.8rem; background: #0b0f19; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 0.9rem; outline: none; }
     .auth-form button { width: 100%; padding: 0.8rem; background: #38bdf8; color: #0b0f19; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
     
-    /* FALLBACK CONTAINER (PILIHAN SAAT LOGIN GAGAL) */
+    /* FALLBACK CONTAINER (PILIHAN SAAT AKSES/LOGIN GAGAL) */
     .fallback-container { display: none; margin-top: 1.2rem; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; }
     .fallback-title { font-size: 0.8rem; color: #fb7185; margin-bottom: 0.8rem; font-weight: 600; line-height: 1.3; }
     .fallback-btn { width: 100%; padding: 0.7rem; background: #1e293b; border: 1px solid #38bdf8; border-radius: 8px; color: #38bdf8; font-weight: 600; cursor: pointer; font-size: 0.8rem; transition: 0.2s; margin-bottom: 0.5rem; }
     .fallback-btn:hover { background: #38bdf8; color: #0b0f19; }
 
-    /* LOADING OVERLAY (GIF JAMUR DANCE RESPONSIVE) */
+    /* LOADING OVERLAY (ANIMASI JAMUR DANCE) */
     .loading-overlay { position: absolute; inset: 0; background: #151d2a; z-index: 40; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 1rem; }
     .loading-text { font-size: 0.85rem; color: #38bdf8; font-weight: 600; }
 
@@ -42,7 +42,7 @@
     .chat-opt-btn { width: 100%; padding: 0.6rem; background: #1e293b; border: 1px solid #38bdf8; border-radius: 6px; color: #38bdf8; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; }
     .chat-opt-btn:disabled { opacity: 0.6; cursor: not-allowed; border-color: #334155; color: #94a3b8; }
 
-    /* PANEL BUAT PILIHAN */
+    /* PANEL BUAT PILIHAN BARU (ADMIN) */
     .admin-panel { padding: 0.8rem; background: #0f172a; border-top: 1px solid rgba(255, 255, 255, 0.1); display: none; flex-direction: column; gap: 0.5rem; }
     .admin-panel input { padding: 0.5rem; background: #0b0f19; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 0.8rem; }
     
@@ -65,17 +65,16 @@
       <div class="loading-text">Menyiapkan obrolan...</div>
     </div>
 
-    <!-- POPUP LOGIN -->
+    <!-- POPUP LOGIN (CUKUP USERNAME/EMAIL) -->
     <div class="auth-modal" id="auth-modal">
       <form class="auth-form" id="login-form">
         <h3 style="color:#f8fafc; margin-bottom:0.3rem;">WEB lagu eror da</h3>
         <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:1rem;">kalo lu mau jelasin hal hal yang bikin itu enakan buat lu, buka blok yang aja, atau lu mau ketemu? btw gw balik tanggal 14, besok gw free</p>
-        <input type="email" id="auth-email" placeholder="Email" required autocomplete="username">
-        <input type="password" id="auth-password" placeholder="Kata Sandi" required autocomplete="current-password">
+        <input type="email" id="auth-email" placeholder="Masukkan Email / Username" required autocomplete="username">
         <button type="submit">Masuk</button>
       </form>
 
-      <!-- PILIHAN JIKA LOGIN HILDA GAGAL -->
+      <!-- PILIHAN JIKA AKSES GAGAL -->
       <div class="fallback-container" id="fallback-container">
         <p class="fallback-title">Gagal masuk? maap webnya lagi eror ini, kacau bgt biong emg, Pilihlah salah satu opsi di bawah ini untuk memberitahu Wahbi:</p>
         <button class="fallback-btn" id="fallback-opt-1">Beritahu Wahbi jika ingin bertemu (FYI, wahbi kesemarang tanggal 14)</button>
@@ -94,7 +93,7 @@
     <!-- AREA CHAT -->
     <div class="chat-messages" id="messages-container"></div>
 
-    <!-- PANEL BUAT PILIHAN BARU -->
+    <!-- PANEL BUAT PILIHAN BARU (ADMIN) -->
     <div class="admin-panel" id="admin-panel">
       <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">Kirim Pesan Opsi Baru</span>
       <div style="display:flex; gap:0.4rem;">
@@ -113,20 +112,19 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, push, set, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBBBBXwONde-J0tpoHxBXdLy0l9kAKdT8I",
-  authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
-  databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "chitt-chatt-d8fbe",
-  storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
-  messagingSenderId: "948039492157",
-  appId: "1:948039492157:web:57deb114bc813b55f04054",
+      authDomain: "chitt-chatt-d8fbe.firebaseapp.com",
+      databaseURL: "https://chitt-chatt-d8fbe-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "chitt-chatt-d8fbe",
+      storageBucket: "chitt-chatt-d8fbe.firebasestorage.app",
+      messagingSenderId: "948039492157",
+      appId: "1:948039492157:web:57deb114bc813b55f04054"
+    };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getDatabase(app);
 
     const ADMIN_EMAIL = "mudrikawahbi@gmail.com";
@@ -137,7 +135,6 @@
     const authModal = document.getElementById('auth-modal');
     const loginForm = document.getElementById('login-form');
     const authEmail = document.getElementById('auth-email');
-    const authPassword = document.getElementById('auth-password');
     const logoutBtn = document.getElementById('logout-btn');
     
     const fallbackContainer = document.getElementById('fallback-container');
@@ -151,39 +148,65 @@
     const adminPanel = document.getElementById('admin-panel');
     const saveOptionsBtn = document.getElementById('save-options-btn');
 
-    let currentUser = null;
+    let currentUserEmail = localStorage.getItem('user_email');
 
-    // LOGIKA TOMBOL MASUK
+    // MENGATUR HAK AKSES & PERAN USER
+    function handleUserSession(email) {
+      currentUserEmail = email.toLowerCase();
+      localStorage.setItem('user_email', currentUserEmail);
+
+      authModal.style.display = 'none';
+
+      if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
+        msgInput.disabled = false;
+        sendBtn.disabled = false;
+        msgInput.placeholder = "Ketik pesan...";
+        adminPanel.style.display = 'flex';
+      } else if (currentUserEmail === VISITOR_EMAIL.toLowerCase()) {
+        msgInput.disabled = true;
+        sendBtn.disabled = true;
+        msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
+        adminPanel.style.display = 'none';
+
+        // Log Otomatis Masuk untuk Hilda
+        const now = new Date();
+        const jamMasuk = now.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' });
+        push(ref(db, 'user_logs/hilda'), { email: currentUserEmail, waktuMasuk: jamMasuk, timestamp: Date.now() });
+      }
+
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+      }, 1200);
+    }
+
+    // PEMERIKSAAN SESI LOKAL
+    if (currentUserEmail && ALLOWED_EMAILS.includes(currentUserEmail.toLowerCase())) {
+      loadingOverlay.style.display = 'flex';
+      handleUserSession(currentUserEmail);
+    } else {
+      authModal.style.display = 'flex';
+      loadingOverlay.style.display = 'none';
+    }
+
+    // LOGIKA PROSES MASUK (SUBMIT FORM)
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = authEmail.value.trim().toLowerCase();
-      const password = authPassword.value.trim();
-
       fallbackContainer.style.display = 'none';
 
       if (!ALLOWED_EMAILS.includes(email)) {
-        alert("Akses Ditolak: Email '" + email + "' tidak ada di whitelist!");
+        alert("Akses Ditolak: Email '" + email + "' tidak terdaftar!");
+        if (email.includes("hilda") || email.includes("nata")) {
+          fallbackContainer.style.display = 'block';
+        }
         return;
       }
 
       loadingOverlay.style.display = 'flex';
-      
-      signInWithEmailAndPassword(auth, email, password)
-        .catch((error) => {
-          loadingOverlay.style.display = 'none';
-          console.error("Detail Error:", error);
-
-          // JIKA YANG GAGAL ADALAH HILDA, MUNCULKAN OPTI PESAN DARURAT
-          if (email === VISITOR_EMAIL.toLowerCase()) {
-            fallbackContainer.style.display = 'block';
-            alert("Gagal masuk. hilda bisa memilih opsi pesan langsung dibawah form ini dulu nyakkk:))!");
-          } else {
-            alert("GAGAL LOGIN!\n\nKode Error: " + error.code + "\nPesan: " + error.message);
-          }
-        });
+      handleUserSession(email);
     });
 
-    // KIRIM PILIHAN DARI HILDA KE DATABASE 'choice out app chit chat'
+    // KIRIM OPSIONAL DARURAT (FALLBACK)
     function sendFallbackChoice(choiceText) {
       push(ref(db, 'choice out app chit chat'), {
         email: VISITOR_EMAIL,
@@ -200,52 +223,13 @@
     fallbackOpt1.addEventListener('click', () => sendFallbackChoice("Beritahu Wahbi jika ingin bertemu"));
     fallbackOpt2.addEventListener('click', () => sendFallbackChoice("Beritahu Wahbi jika ingin menjelaskan secara chat"));
 
+    // KELUAR / LOGOUT
     logoutBtn.addEventListener('click', () => {
-      signOut(auth);
+      localStorage.removeItem('user_email');
+      location.reload();
     });
 
-    // PEMERIKSAAN PERAN USER
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        const userEmail = user.email.toLowerCase();
-
-        if (!ALLOWED_EMAILS.includes(userEmail)) {
-          alert("Akses Ditolak!");
-          signOut(auth);
-          return;
-        }
-
-        authModal.style.display = 'none';
-
-        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-          msgInput.disabled = false;
-          sendBtn.disabled = false;
-          msgInput.placeholder = "Ketik pesan...";
-          adminPanel.style.display = 'flex';
-        } else if (userEmail === VISITOR_EMAIL.toLowerCase()) {
-          msgInput.disabled = true;
-          sendBtn.disabled = true;
-          msgInput.placeholder = "Anda tidak bisa mengirim pesan.";
-          adminPanel.style.display = 'none';
-
-          const now = new Date();
-          const jamMasuk = now.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' });
-          push(ref(db, 'user_logs/hilda'), { email: userEmail, waktuMasuk: jamMasuk, timestamp: Date.now() });
-        }
-
-        setTimeout(() => {
-          loadingOverlay.style.display = 'none';
-        }, 1500);
-
-      } else {
-        authModal.style.display = 'flex';
-        loadingOverlay.style.display = 'none';
-        msgContainer.innerHTML = "";
-      }
-    });
-
-    // KIRIM CHAT TEKS
+    // KIRIM CHAT TEKS (ADMIN)
     sendBtn.addEventListener('click', () => {
       const text = msgInput.value.trim();
       if (text !== "") {
@@ -258,7 +242,7 @@
       }
     });
 
-    // KIRIM PILIHAN BARU DARI ADMIN
+    // KIRIM PILIHAN BARU (ADMIN)
     saveOptionsBtn.addEventListener('click', () => {
       const opt1 = document.getElementById('new-opt-1').value.trim();
       const opt2 = document.getElementById('new-opt-2').value.trim();
@@ -274,7 +258,7 @@
       }
     });
 
-    // BACA SETIAP PESAN KELUAR
+    // BACA SETIAP PESAN REAL-TIME DARI FIREBASE
     onChildAdded(ref(db, 'messages'), (snapshot) => {
       const data = snapshot.val();
       const div = document.createElement('div');
@@ -293,15 +277,16 @@
         setTimeout(() => {
           const buttons = div.querySelectorAll('.chat-opt-btn');
           buttons.forEach(btn => {
-            if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+            if (currentUserEmail === ADMIN_EMAIL.toLowerCase()) {
               btn.disabled = true;
             } else {
               btn.addEventListener('click', () => {
                 const selected = btn.getAttribute('data-choice');
-                set(ref(db, `responses/${currentUser.uid}`), {
-                  email: currentUser.email,
+                push(ref(db, 'responses/hilda_responses'), {
+                  email: currentUserEmail,
                   selectedChoice: selected,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
+                  waktu: new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' })
                 });
                 alert(`Pilihan (${selected}) berhasil terkirim!`);
               });
